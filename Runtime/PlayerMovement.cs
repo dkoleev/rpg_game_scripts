@@ -36,7 +36,7 @@ namespace Darkness.Runtime
             _moveInput = _moveAction.ReadValue<Vector2>();
             if (_jumpAction.IsPressed())
             {
-                // your jump code here
+                //TODO: jump logic if needed of course
             }
 
             if (_attackAction.WasPerformedThisFrame())
