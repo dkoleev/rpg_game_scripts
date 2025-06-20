@@ -43,6 +43,10 @@ namespace Darkness.Runtime
             {
                 Attack();
             }
+			
+			//TODO: swim logic
+
+			//TODO: fly logic
         }
 
         private void FixedUpdate()
