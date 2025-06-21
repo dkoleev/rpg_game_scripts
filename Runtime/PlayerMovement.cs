@@ -47,6 +47,8 @@ namespace Darkness.Runtime
 			//TODO: swim logic
 
 			//TODO: fly logic
+
+			//just for test
         }
 
         private void FixedUpdate()
