@@ -10,9 +10,10 @@ namespace Darkness.Runtime.Logic.Player
         private IInteractable _currentTarget;
         private Transform _rootTransform;
         private InputAction _interactAction;
-
+    
         void Start()
         {
+            _interactableLayer = LayerMask.GetMask("Interactable");
             _interactAction = InputSystem.actions.FindAction("Interact");
         }
         
