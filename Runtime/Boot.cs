@@ -1,5 +1,6 @@
 ﻿using System;
 using Darkness.Runtime.Core;
+using DG.Tweening;
 using VContainer.Unity;
 
 namespace Darkness.Runtime
@@ -13,6 +14,7 @@ namespace Darkness.Runtime
 
         private void StartGame(RunMode runMode)
         {
+            DOTween.Init(false, false, LogBehaviour.Default).SetCapacity(100, 30);
             //TODO: logic for game loading
         }
 

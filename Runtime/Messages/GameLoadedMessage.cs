@@ -1,6 +1,6 @@
 ﻿namespace Darkness.Runtime.Messages
 {
-    public class GameLoaded
+    public class GameLoadedMessage
     {
         
     }
