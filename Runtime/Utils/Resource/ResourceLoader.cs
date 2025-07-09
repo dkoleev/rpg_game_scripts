@@ -2,7 +2,7 @@
 using Darkness.Runtime.Utils.CustomTypes;
 using UnityEngine;
 
-namespace Darkness.Runtime.Utils
+namespace Darkness.Runtime.Utils.Resource
 {
     public static class ResourceLoader
     {

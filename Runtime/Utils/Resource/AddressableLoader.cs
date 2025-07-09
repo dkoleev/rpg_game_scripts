@@ -1,7 +1,10 @@
-﻿/*using UnityEngine.AddressableAssets;
+﻿using System;
+using System.Threading.Tasks;
+using Darkness.Runtime.Utils.CustomTypes;
+using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace Darkness.Runtime.Utils
+namespace Darkness.Runtime.Utils.Resource
 {
    
     public static class AddressableLoader
@@ -37,4 +40,4 @@ namespace Darkness.Runtime.Utils
             }
         }
     }
-}*/
+}
