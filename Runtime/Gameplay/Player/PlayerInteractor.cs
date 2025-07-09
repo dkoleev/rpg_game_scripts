@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Darkness.Runtime.Logic.Player
+namespace Darkness.Runtime.Gameplay.Player
 {
     public class PlayerInteractor
     {

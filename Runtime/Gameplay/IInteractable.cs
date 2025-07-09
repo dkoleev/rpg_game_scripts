@@ -1,4 +1,4 @@
-﻿namespace Darkness.Runtime.Logic
+﻿namespace Darkness.Runtime.Gameplay
 {
     public interface IInteractable
     {
