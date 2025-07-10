@@ -1,0 +1,14 @@
+\doxysection{Assets/\+Scripts Directory Reference}
+\hypertarget{dir_f13b41af88cf68434578284aaf699e39}{}\label{dir_f13b41af88cf68434578284aaf699e39}\index{Assets/Scripts Directory Reference@{Assets/Scripts Directory Reference}}
+Directory dependency graph for Scripts\+:
+% FIG 0
+\doxysubsubsection*{Files}
+\begin{DoxyCompactItemize}
+\item 
+file \mbox{\hyperlink{_code_style_8cs}{Code\+Style.\+cs}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\hypertarget{README.md_autotoc_md0}{}\doxysubsection{\texorpdfstring{Scripts of\mbox{[}\`{}rpg\`{}\mbox{]}(\href{https://github.com/dkoleev/rpg_game}{\texttt{https\+://github.\+com/dkoleev/rpg\+\_\+game}}) game.}{Scripts of\mbox{[}\`{}rpg\`{}\mbox{]}(\href{https://github.com/dkoleev/rpg_game}{\texttt{https\+://github.\+com/dkoleev/rpg\+\_\+game}}) game.}}\label{README.md_autotoc_md0}
+This is the submodule for isolating scripts of game to make workflow clearly. 
