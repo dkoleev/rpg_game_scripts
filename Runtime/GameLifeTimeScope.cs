@@ -1,4 +1,5 @@
-﻿using Darkness.Runtime.Messages;
+﻿using Darkness.Runtime.Log;
+using Darkness.Runtime.Messages;
 using MessagePipe;
 using VContainer;
 using VContainer.Unity;
@@ -24,6 +25,8 @@ namespace Darkness.Runtime
             // also exists RegisterMessageBroker<TKey, TMessage>, RegisterRequestHandler, RegisterAsyncRequestHandler
             // RegisterMessageHandlerFilter: Register for filter, also exists RegisterAsyncMessageHandlerFilter, Register(Async)RequestHandlerFilter
             //builder.RegisterMessageHandlerFilter<MyFilter<int>>();
+
+            builder.Register<GameLogger>(Lifetime.Singleton);
             
             builder.RegisterEntryPoint<Boot>();
         }
