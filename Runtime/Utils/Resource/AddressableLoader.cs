@@ -1,8 +1,11 @@
 ﻿using System;
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Darkness.Runtime.Utils.CustomTypes;
+using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceProviders;
+using UnityEngine.SceneManagement;
 
 namespace Darkness.Runtime.Utils.Resource
 {
@@ -15,13 +18,13 @@ namespace Darkness.Runtime.Utils.Resource
             return AsyncResult<T>.FromTask(task);
         }
 
-        private static async Task<Result<T>> LoadAddressableAsync<T>(string key)
+        private static async UniTask<Result<T>> LoadAddressableAsync<T>(string key)
         {
             AsyncOperationHandle<T> handle = Addressables.LoadAssetAsync<T>(key);
-        
+
             try
             {
-                await handle.Task;
+                await handle.ToUniTask();
             
                 if (handle.Status == AsyncOperationStatus.Succeeded)
                 {
@@ -37,6 +40,72 @@ namespace Darkness.Runtime.Utils.Resource
             {
                 Addressables.Release(handle);
                 return Result<T>.Fail($"Error loading addressable {key}: {e.Message}");
+            }
+        }
+
+        public static AsyncResult<SceneInstance> LoadScene(string key, LoadSceneMode loadMode = LoadSceneMode.Single)
+        {
+            var task = LoadSceneAsync(key, loadMode);
+            return AsyncResult<SceneInstance>.FromTask(task);
+        }
+
+        private static async UniTask<Result<SceneInstance>> LoadSceneAsync(string key, LoadSceneMode loadMode = LoadSceneMode.Single)
+        {
+            AsyncOperationHandle<SceneInstance> handle = Addressables.LoadSceneAsync(key, loadMode);
+
+            try
+            {
+                await handle.ToUniTask();
+
+                if (handle.Status == AsyncOperationStatus.Succeeded)
+                {
+                    return Result<SceneInstance>.Success(handle.Result);
+                }
+                else
+                {
+                    Addressables.Release(handle);
+                    return Result<SceneInstance>.Fail($"Failed to load scene: {key}");
+                }
+            }
+            catch (Exception e)
+            {
+                Addressables.Release(handle);
+                return Result<SceneInstance>.Fail($"Error loading scene {key}: {e.Message}");
+            }
+        }
+
+        public static AsyncResult<SceneInstance> LoadSceneWithProgress(string key, LoadSceneMode loadMode = LoadSceneMode.Single, Action<float> onProgress = null)
+        {
+            var task = LoadSceneWithProgressAsync(key, loadMode, onProgress);
+            return AsyncResult<SceneInstance>.FromTask(task);
+        }
+
+        private static async UniTask<Result<SceneInstance>> LoadSceneWithProgressAsync(string key, LoadSceneMode loadMode = LoadSceneMode.Single, Action<float> onProgress = null)
+        {
+            AsyncOperationHandle<SceneInstance> handle = Addressables.LoadSceneAsync(key, loadMode);
+
+            try
+            {
+                await handle.ToUniTask(Progress.Create<float>(progress => {
+                    onProgress?.Invoke(progress);
+                }));
+
+                onProgress?.Invoke(1f);
+
+                if (handle.Status == AsyncOperationStatus.Succeeded)
+                {
+                    return Result<SceneInstance>.Success(handle.Result);
+                }
+                else
+                {
+                    Addressables.Release(handle);
+                    return Result<SceneInstance>.Fail($"Failed to load scene: {key}");
+                }
+            }
+            catch (Exception e)
+            {
+                Addressables.Release(handle);
+                return Result<SceneInstance>.Fail($"Error loading scene {key}: {e.Message}");
             }
         }
     }

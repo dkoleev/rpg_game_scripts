@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using Darkness.Runtime.Utils.CustomTypes;
 using UnityEngine;
 
@@ -12,15 +12,12 @@ namespace Darkness.Runtime.Utils.Resource
             return AsyncResult<T>.FromTask(task);
         }
 
-        private static async Task<Result<T>> LoadResourceAsync<T>(string path) where T : Object
+        private static async UniTask<Result<T>> LoadResourceAsync<T>(string path) where T : Object
         {
             ResourceRequest request = Resources.LoadAsync<T>(path);
-        
+
             // Wait for the async operation to complete
-            while (!request.isDone)
-            {
-                await Task.Yield();
-            }
+            await request;
 
             if (request.asset == null)
             {

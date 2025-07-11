@@ -15,7 +15,24 @@ namespace Darkness.Runtime
         private void StartGame(RunMode runMode)
         {
             DOTween.Init(false, false, LogBehaviour.Default).SetCapacity(100, 30);
-            //TODO: logic for game loading
+            LoadGameData();
+            LoadPlayerState();
+            LoadLevel();
+        }
+
+        private void LoadGameData()
+        {
+            
+        }
+
+        private void LoadPlayerState()
+        {
+            
+        }
+
+        private void LoadLevel()
+        {
+            
         }
 
         public void Dispose()

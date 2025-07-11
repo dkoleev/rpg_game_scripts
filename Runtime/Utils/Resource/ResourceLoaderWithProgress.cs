@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Darkness.Runtime.Utils.CustomTypes;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -8,15 +8,13 @@ namespace Darkness.Runtime.Utils.Resource
 {
     public static class ResourceLoaderWithProgress
     {
-        public static async Task<Result<T>> LoadWithProgress<T>(string path, Action<float> onProgress = null) where T : Object
+        public static async UniTask<Result<T>> LoadWithProgress<T>(string path, Action<float> onProgress = null) where T : Object
         {
             ResourceRequest request = Resources.LoadAsync<T>(path);
-        
-            while (!request.isDone)
-            {
-                onProgress?.Invoke(request.progress);
-                await Task.Yield();
-            }
+
+            await request.ToUniTask(Progress.Create<float>(progress => {
+                onProgress?.Invoke(progress);
+            }));
 
             onProgress?.Invoke(1f);
 
@@ -26,6 +24,11 @@ namespace Darkness.Runtime.Utils.Resource
             }
 
             return Result<T>.Success((T)request.asset);
+        }
+
+        public static AsyncResult<T> LoadWithProgressAsync<T>(string path, Action<float> onProgress = null) where T : Object
+        {
+            return AsyncResult<T>.FromTask(LoadWithProgress<T>(path, onProgress));
         }
     }
 }
