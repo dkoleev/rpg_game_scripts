@@ -55,6 +55,9 @@ namespace Darkness.Runtime
             await LoadScene("Player");
 
             var player = GameObject.FindWithTag("Player");
+            var spawnPoint = GameObject.FindWithTag("PlayerSpawnPoint");
+            player.transform.position = spawnPoint.transform.position;
+            
             var brain = Camera.main.GetComponent<CinemachineBrain>();
             CinemachineCamera liveCam;
             if (brain.ActiveVirtualCamera is CinemachineCameraManagerBase managerCam)
