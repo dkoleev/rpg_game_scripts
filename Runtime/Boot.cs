@@ -1,7 +1,10 @@
 ﻿using System;
+using System.IO;
+using Cysharp.Threading.Tasks;
 using Darkness.Runtime.Core;
 using Darkness.Runtime.Log;
 using DG.Tweening;
+using UnityEngine.SceneManagement;
 using VContainer;
 using VContainer.Unity;
 
@@ -19,16 +22,16 @@ namespace Darkness.Runtime
         
         void IStartable.Start()
         {
-            StartGame(RunMode.Full);
+            StartGame(RunMode.Full).Forget();
         }
 
-        private void StartGame(RunMode runMode)
+        private async UniTask StartGame(RunMode runMode)
         {
             _gameLogger.SetLevel(GameLogger.LogLevel.All);
             DOTween.Init(false, false, LogBehaviour.Default).SetCapacity(100, 30);
             LoadGameData();
             LoadPlayerState();
-            LoadLevel();
+            await LoadScenes();
         }
 
         private void LoadGameData()
@@ -41,10 +44,19 @@ namespace Darkness.Runtime
             
         }
 
-        private async void LoadLevel()
+        private async UniTask LoadScenes()
         {
-            var sceneResult = await Utils.Resource.AddressableLoader.LoadScene("Scenes/Home").Await();
+            await LoadScene("Player");
+            await LoadScene("Home");
+        }
 
+        private async UniTask LoadScene(string scenePath)
+        {
+            var prefix = "Scenes/";
+            var postfix = ".unity";
+            var finalPath = prefix + scenePath + postfix;
+            
+            var sceneResult = await Utils.Resource.AddressableLoader.LoadScene(finalPath, LoadSceneMode.Additive).Await();
             sceneResult.Match(
                 onSuccess: scene => {
                     _gameLogger.Log("Home scene loaded successfully");
@@ -53,8 +65,9 @@ namespace Darkness.Runtime
                     _gameLogger.Error($"Failed to load Home scene: {error}");
                 }
             );
+            
         }
-
+        
         public void Dispose()
         {
             //Cleanup
