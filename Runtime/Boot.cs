@@ -49,7 +49,8 @@ namespace Darkness.Runtime
 
         private async UniTask LoadScenes()
         {
-            await LoadScene("Home");
+            // await LoadScene("Home");
+            await LoadScene("Introduction");
             await LoadScene("CameraAndLighting");
             await LoadScene("Player");
 
@@ -67,6 +68,8 @@ namespace Darkness.Runtime
 
             liveCam.ForceCameraPosition(player.transform.position, Quaternion.identity);
             liveCam.Follow = player.transform;
+            var cameraBounds = GameObject.FindWithTag("CameraBounds").GetComponent<Collider2D>();
+            liveCam.GetComponent<CinemachineConfiner2D>().BoundingShape2D = cameraBounds;
         }
 
         private async UniTask LoadScene(string scenePath)
