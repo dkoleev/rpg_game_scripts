@@ -4,9 +4,12 @@ using Cysharp.Threading.Tasks;
 using Darkness.Runtime.Core;
 using Darkness.Runtime.Log;
 using DG.Tweening;
+using Unity.Cinemachine;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using VContainer;
 using VContainer.Unity;
+using Object = UnityEngine.Object;
 
 namespace Darkness.Runtime
 {
@@ -46,14 +49,30 @@ namespace Darkness.Runtime
 
         private async UniTask LoadScenes()
         {
-            await LoadScene("Player");
             await LoadScene("Home");
+            await LoadScene("CameraAndLighting");
+            await LoadScene("Player");
+
+            var player = GameObject.FindWithTag("Player");
+            var brain = Camera.main.GetComponent<CinemachineBrain>();
+            CinemachineCamera liveCam;
+            if (brain.ActiveVirtualCamera is CinemachineCameraManagerBase managerCam)
+            {
+                liveCam = managerCam.LiveChild as CinemachineCamera;
+            }
+            else
+            {
+                liveCam = brain.ActiveVirtualCamera as CinemachineCamera;
+            }
+
+            liveCam.ForceCameraPosition(player.transform.position, Quaternion.identity);
+            liveCam.Follow = player.transform;
         }
 
         private async UniTask LoadScene(string scenePath)
         {
-            var prefix = "Scenes/";
-            var postfix = ".unity";
+            const string prefix = "Scenes/";
+            const string postfix = ".unity";
             var finalPath = prefix + scenePath + postfix;
             
             var sceneResult = await Utils.Resource.AddressableLoader.LoadScene(finalPath, LoadSceneMode.Additive).Await();
