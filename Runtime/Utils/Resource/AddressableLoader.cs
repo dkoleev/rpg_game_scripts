@@ -10,15 +10,15 @@ using UnityEngine.SceneManagement;
 namespace Darkness.Runtime.Utils.Resource
 {
    
-    public static class AddressableLoader
+    public class AddressableLoader
     {
-        public static AsyncResult<T> LoadAddressable<T>(string key)
+        public AsyncResult<T> LoadAddressable<T>(string key)
         {
             var task = LoadAddressableAsync<T>(key);
             return AsyncResult<T>.FromTask(task);
         }
 
-        private static async UniTask<Result<T>> LoadAddressableAsync<T>(string key)
+        private async UniTask<Result<T>> LoadAddressableAsync<T>(string key)
         {
             AsyncOperationHandle<T> handle = Addressables.LoadAssetAsync<T>(key);
 
@@ -43,13 +43,13 @@ namespace Darkness.Runtime.Utils.Resource
             }
         }
 
-        public static AsyncResult<SceneInstance> LoadScene(string key, LoadSceneMode loadMode = LoadSceneMode.Single)
+        public AsyncResult<SceneInstance> LoadScene(string key, LoadSceneMode loadMode = LoadSceneMode.Single)
         {
             var task = LoadSceneAsync(key, loadMode);
             return AsyncResult<SceneInstance>.FromTask(task);
         }
 
-        private static async UniTask<Result<SceneInstance>> LoadSceneAsync(string key, LoadSceneMode loadMode = LoadSceneMode.Single)
+        private async UniTask<Result<SceneInstance>> LoadSceneAsync(string key, LoadSceneMode loadMode = LoadSceneMode.Single)
         {
             AsyncOperationHandle<SceneInstance> handle = Addressables.LoadSceneAsync(key, loadMode);
 
@@ -74,13 +74,13 @@ namespace Darkness.Runtime.Utils.Resource
             }
         }
 
-        public static AsyncResult<SceneInstance> LoadSceneWithProgress(string key, LoadSceneMode loadMode = LoadSceneMode.Single, Action<float> onProgress = null)
+        public AsyncResult<SceneInstance> LoadSceneWithProgress(string key, LoadSceneMode loadMode = LoadSceneMode.Single, Action<float> onProgress = null)
         {
             var task = LoadSceneWithProgressAsync(key, loadMode, onProgress);
             return AsyncResult<SceneInstance>.FromTask(task);
         }
 
-        private static async UniTask<Result<SceneInstance>> LoadSceneWithProgressAsync(string key, LoadSceneMode loadMode = LoadSceneMode.Single, Action<float> onProgress = null)
+        private async UniTask<Result<SceneInstance>> LoadSceneWithProgressAsync(string key, LoadSceneMode loadMode = LoadSceneMode.Single, Action<float> onProgress = null)
         {
             AsyncOperationHandle<SceneInstance> handle = Addressables.LoadSceneAsync(key, loadMode);
 

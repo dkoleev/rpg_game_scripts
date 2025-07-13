@@ -14,11 +14,11 @@ namespace Darkness.Runtime.Utils.Resource
             );
 
             // Using Addressables
-            var prefabResult = await AddressableLoader.LoadAddressable<GameObject>("Enemies/Orc").Await();
-            prefabResult.Match(
-                prefab => Object.Instantiate(prefab, Vector3.zero, Quaternion.identity),
-                Debug.LogError
-            );
+            // var prefabResult = await AddressableLoader.LoadAddressable<GameObject>("Enemies/Orc").Await();
+            // prefabResult.Match(
+            //     prefab => Object.Instantiate(prefab, Vector3.zero, Quaternion.identity),
+            //     Debug.LogError
+            // );
             
             var result = await ResourceLoaderWithProgress.LoadWithProgress<AudioClip>(
                 "Audio/Music", 

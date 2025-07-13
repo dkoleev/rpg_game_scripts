@@ -3,7 +3,9 @@ using System.IO;
 using Cysharp.Threading.Tasks;
 using Darkness.Runtime.Core;
 using Darkness.Runtime.Log;
+using Darkness.Runtime.Utils.Resource;
 using DG.Tweening;
+using SuperTiled2Unity;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -16,11 +18,13 @@ namespace Darkness.Runtime
     public class Boot : IStartable, IDisposable
     {
         private readonly GameLogger _gameLogger;
+        private readonly AddressableLoader _addressableLoader;
 
         [Inject]
-        private Boot(GameLogger gameLogger)
+        private Boot(GameLogger gameLogger, AddressableLoader addressableLoader)
         {
             _gameLogger = gameLogger;
+            _addressableLoader = addressableLoader;
         }
         
         void IStartable.Start()
@@ -55,8 +59,33 @@ namespace Darkness.Runtime
             await LoadScene("Player");
 
             var player = GameObject.FindWithTag("Player");
-            var spawnPoint = GameObject.FindWithTag("PlayerSpawnPoint");
-            player.transform.position = spawnPoint.transform.position;
+
+            var spawnPoints = GameObject.FindGameObjectsWithTag("SpawnPoint");
+            foreach (var point in spawnPoints)
+            {
+                var scp = point.GetComponent<SuperCustomProperties>();
+                if (scp.TryGetCustomProperty("character", out var character))
+                {
+                    var characterId = character.m_Value;
+                    if (characterId == "Player")
+                    {
+                        player.transform.position = point.transform.position;
+                    }
+                    else
+                    {
+                        var prefabResult = await _addressableLoader
+                            .LoadAddressable<GameObject>($"Characters/{characterId}.prefab").Await();
+                        prefabResult.Match(
+                            prefab =>
+                            {
+                                var instance = Object.Instantiate(prefab, Vector3.zero, Quaternion.identity);
+                                instance.transform.position = point.transform.position;
+                            },
+                            Debug.LogError
+                        );
+                    }
+                }
+            }
             
             var brain = Camera.main.GetComponent<CinemachineBrain>();
             CinemachineCamera liveCam;
@@ -81,7 +110,7 @@ namespace Darkness.Runtime
             const string postfix = ".unity";
             var finalPath = prefix + scenePath + postfix;
             
-            var sceneResult = await Utils.Resource.AddressableLoader.LoadScene(finalPath, LoadSceneMode.Additive).Await();
+            var sceneResult = await _addressableLoader.LoadScene(finalPath, LoadSceneMode.Additive).Await();
             sceneResult.Match(
                 onSuccess: scene => {
                     _gameLogger.Log("Home scene loaded successfully");

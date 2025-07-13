@@ -1,5 +1,6 @@
 ﻿using Darkness.Runtime.Log;
 using Darkness.Runtime.Messages;
+using Darkness.Runtime.Utils.Resource;
 using MessagePipe;
 using VContainer;
 using VContainer.Unity;
@@ -27,6 +28,7 @@ namespace Darkness.Runtime
             //builder.RegisterMessageHandlerFilter<MyFilter<int>>();
 
             builder.Register<GameLogger>(Lifetime.Singleton);
+            builder.Register<AddressableLoader>(Lifetime.Singleton);
             
             builder.RegisterEntryPoint<Boot>();
         }
