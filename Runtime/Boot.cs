@@ -53,10 +53,11 @@ namespace Darkness.Runtime
 
         private async UniTask LoadScenes()
         {
-            // await LoadScene("Home");
-            await LoadScene("Introduction");
+            // await LoadScene("Maps/Home");
+            await LoadScene("Maps/Introduction");
             await LoadScene("CameraAndLighting");
             await LoadScene("Player");
+            await LoadScene("Dialogues");
 
             var player = GameObject.FindWithTag("Player");
 
