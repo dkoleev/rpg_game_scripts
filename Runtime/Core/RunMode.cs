@@ -1,7 +1,5 @@
-﻿namespace Darkness.Runtime.Core
-{
-    public enum RunMode
-    {
+﻿namespace Darkness.Runtime.Core {
+    public enum RunMode {
         Full,
         Headless
     }

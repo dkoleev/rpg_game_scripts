@@ -5,14 +5,11 @@ using MessagePipe;
 using VContainer;
 using VContainer.Unity;
 
-namespace Darkness.Runtime
-{
-    public class GameLifeTimeScope : LifetimeScope
-    {
-        protected override void Configure(IContainerBuilder builder)
-        {
+namespace Darkness.Runtime {
+    public class GameLifeTimeScope : LifetimeScope {
+        protected override void Configure(IContainerBuilder builder) {
             // RegisterMessagePipe returns options.
-            var options = builder.RegisterMessagePipe(/* configure option */);
+            var options = builder.RegisterMessagePipe( /* configure option */);
             // Setup GlobalMessagePipe to enable a diagnostics window and global function
             builder.RegisterBuildCallback(c => GlobalMessagePipe.SetProvider(c.AsServiceProvider()));
 
@@ -29,7 +26,7 @@ namespace Darkness.Runtime
 
             builder.Register<GameLogger>(Lifetime.Singleton);
             builder.Register<AddressableLoader>(Lifetime.Singleton);
-            
+
             builder.RegisterEntryPoint<Boot>();
         }
     }

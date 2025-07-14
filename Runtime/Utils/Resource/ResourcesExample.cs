@@ -1,11 +1,8 @@
 ﻿using UnityEngine;
 
-namespace Darkness.Runtime.Utils.Resource
-{
-    public class ResourcesExample
-    {
-        private async void LoadResources()
-        {
+namespace Darkness.Runtime.Utils.Resource {
+    public class ResourcesExample {
+        private async void LoadResources() {
             GameObject go = null;
             var textureResult = await ResourceLoader.LoadAsync<Texture2D>("Textures/Background").Await();
             textureResult.Match(
@@ -19,9 +16,9 @@ namespace Darkness.Runtime.Utils.Resource
             //     prefab => Object.Instantiate(prefab, Vector3.zero, Quaternion.identity),
             //     Debug.LogError
             // );
-            
+
             var result = await ResourceLoaderWithProgress.LoadWithProgress<AudioClip>(
-                "Audio/Music", 
+                "Audio/Music",
                 progress => Debug.Log($"Loading: {progress * 100}%")
             );
         }

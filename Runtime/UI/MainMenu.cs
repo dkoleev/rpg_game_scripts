@@ -1,7 +1,3 @@
-﻿namespace Darkness.Runtime.UI
-{
-    public class MainMenu
-    {
-        
-    }
+﻿namespace Darkness.Runtime.UI {
+    public class MainMenu { }
 }

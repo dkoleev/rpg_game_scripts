@@ -1,7 +1,3 @@
-﻿namespace Darkness.Runtime.Presentation
-{
-    public class PlayerView
-    {
-    
-    }
+﻿namespace Darkness.Runtime.Presentation {
+    public class PlayerView { }
 }

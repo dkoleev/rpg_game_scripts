@@ -1,74 +1,58 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Darkness.Runtime.Gameplay.Player
-{
-    public class PlayerInteractor
-    {
+namespace Darkness.Runtime.Gameplay.Player {
+    public class PlayerInteractor {
         private readonly float _interactRadius = 0.5f;
         private LayerMask _interactableLayer;
         private IInteractable _currentTarget;
         private Transform _rootTransform;
         private InputAction _interactAction;
-    
-        void Start()
-        {
+
+        private void Start() {
             _interactableLayer = LayerMask.GetMask("Interactable");
             _interactAction = InputSystem.actions.FindAction("Interact");
         }
-        
-        void Update()
-        {
+
+        private void Update() {
             ScanForInteractables();
 
-            if (_currentTarget != null)
-            {
+            if (_currentTarget != null) {
                 ShowPrompt(_currentTarget.PromptMessage);
 
-                if (_interactAction.WasPerformedThisFrame())
-                {
-                    _currentTarget.Interact();
-                }
+                if (_interactAction.WasPerformedThisFrame()) _currentTarget.Interact();
             }
-            else
-            {
+            else {
                 HidePrompt();
             }
         }
-        
-        void ScanForInteractables()
-        {
+
+        private void ScanForInteractables() {
             var hits = Physics2D.OverlapCircleAll(_rootTransform.position, _interactRadius, _interactableLayer);
             _currentTarget = null;
             var closest = Mathf.Infinity;
 
-            foreach (var hit in hits)
-            {
+            foreach (var hit in hits) {
                 var interactable = hit.GetComponent<IInteractable>();
-                if (interactable != null)
-                {
-                    float dist = Vector2.Distance(_rootTransform.position, hit.transform.position);
-                    if (dist < closest)
-                    {
+                if (interactable != null) {
+                    var dist = Vector2.Distance(_rootTransform.position, hit.transform.position);
+                    if (dist < closest) {
                         closest = dist;
                         _currentTarget = interactable;
                     }
                 }
             }
         }
-        
-        void ShowPrompt(string msg)
-        {
+
+        private void ShowPrompt(string msg) {
             // Example: UIController.Instance.ShowInteractionPrompt(msg);
         }
 
-        void HidePrompt()
-        {
+        private void HidePrompt() {
             // UIController.Instance.HideInteractionPrompt();
         }
 
-        void OnDrawGizmosSelected()
-        {
+        private void OnDrawGizmosSelected() {
             Gizmos.color = Color.yellow;
             Gizmos.DrawWireSphere(_rootTransform.position, _interactRadius);
         }

@@ -13,27 +13,22 @@ using VContainer;
 using VContainer.Unity;
 using Object = UnityEngine.Object;
 
-namespace Darkness.Runtime
-{
-    public class Boot : IStartable, IDisposable
-    {
+namespace Darkness.Runtime {
+    public class Boot : IStartable, IDisposable {
         private readonly GameLogger _gameLogger;
         private readonly AddressableLoader _addressableLoader;
 
         [Inject]
-        private Boot(GameLogger gameLogger, AddressableLoader addressableLoader)
-        {
+        private Boot(GameLogger gameLogger, AddressableLoader addressableLoader) {
             _gameLogger = gameLogger;
             _addressableLoader = addressableLoader;
         }
-        
-        void IStartable.Start()
-        {
+
+        void IStartable.Start() {
             StartGame(RunMode.Full).Forget();
         }
 
-        private async UniTask StartGame(RunMode runMode)
-        {
+        private async UniTask StartGame(RunMode runMode) {
             _gameLogger.SetLevel(GameLogger.LogLevel.All);
             DOTween.Init(false, false, LogBehaviour.Default).SetCapacity(100, 30);
             LoadGameData();
@@ -41,18 +36,11 @@ namespace Darkness.Runtime
             await LoadScenes();
         }
 
-        private void LoadGameData()
-        {
-            
-        }
+        private void LoadGameData() { }
 
-        private void LoadPlayerState()
-        {
-            
-        }
+        private void LoadPlayerState() { }
 
-        private async UniTask LoadScenes()
-        {
+        private async UniTask LoadScenes() {
             // await LoadScene("Maps/Home");
             await LoadScene("Maps/Introduction");
             await LoadScene("CameraAndLighting");
@@ -62,23 +50,18 @@ namespace Darkness.Runtime
             var player = GameObject.FindWithTag("Player");
 
             var spawnPoints = GameObject.FindGameObjectsWithTag("SpawnPoint");
-            foreach (var point in spawnPoints)
-            {
+            foreach (var point in spawnPoints) {
                 var scp = point.GetComponent<SuperCustomProperties>();
-                if (scp.TryGetCustomProperty("character", out var character))
-                {
+                if (scp.TryGetCustomProperty("character", out var character)) {
                     var characterId = character.m_Value;
-                    if (characterId == "Player")
-                    {
+                    if (characterId == "Player") {
                         player.transform.position = point.transform.position;
                     }
-                    else
-                    {
+                    else {
                         var prefabResult = await _addressableLoader
                             .LoadAddressable<GameObject>($"Characters/{characterId}.prefab").Await();
                         prefabResult.Match(
-                            prefab =>
-                            {
+                            prefab => {
                                 var instance = Object.Instantiate(prefab, Vector3.zero, Quaternion.identity);
                                 instance.transform.position = point.transform.position;
                             },
@@ -87,17 +70,13 @@ namespace Darkness.Runtime
                     }
                 }
             }
-            
+
             var brain = Camera.main.GetComponent<CinemachineBrain>();
             CinemachineCamera liveCam;
             if (brain.ActiveVirtualCamera is CinemachineCameraManagerBase managerCam)
-            {
                 liveCam = managerCam.LiveChild as CinemachineCamera;
-            }
             else
-            {
                 liveCam = brain.ActiveVirtualCamera as CinemachineCamera;
-            }
 
             liveCam.ForceCameraPosition(player.transform.position, Quaternion.identity);
             liveCam.Follow = player.transform;
@@ -105,26 +84,19 @@ namespace Darkness.Runtime
             liveCam.GetComponent<CinemachineConfiner2D>().BoundingShape2D = cameraBounds;
         }
 
-        private async UniTask LoadScene(string scenePath)
-        {
+        private async UniTask LoadScene(string scenePath) {
             const string prefix = "Scenes/";
             const string postfix = ".unity";
             var finalPath = prefix + scenePath + postfix;
-            
+
             var sceneResult = await _addressableLoader.LoadScene(finalPath, LoadSceneMode.Additive).Await();
             sceneResult.Match(
-                onSuccess: scene => {
-                    _gameLogger.Log("Home scene loaded successfully");
-                },
-                onFailure: error => {
-                    _gameLogger.Error($"Failed to load Home scene: {error}");
-                }
+                scene => { _gameLogger.Log("Home scene loaded successfully"); },
+                error => { _gameLogger.Error($"Failed to load Home scene: {error}"); }
             );
-            
         }
-        
-        public void Dispose()
-        {
+
+        public void Dispose() {
             //Cleanup
         }
     }
