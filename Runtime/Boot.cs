@@ -2,11 +2,14 @@
 using System.IO;
 using Cysharp.Threading.Tasks;
 using Darkness.Runtime.Core;
+using Darkness.Runtime.ECS.Components;
 using Darkness.Runtime.Log;
 using Darkness.Runtime.Utils.Resource;
 using DG.Tweening;
 using SuperTiled2Unity;
 using Unity.Cinemachine;
+using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using VContainer;
@@ -33,12 +36,37 @@ namespace Darkness.Runtime {
             DOTween.Init(false, false, LogBehaviour.Default).SetCapacity(100, 30);
             LoadGameData();
             LoadPlayerState();
+            InitializeECS();
             await LoadScenes();
         }
 
         private void LoadGameData() { }
 
         private void LoadPlayerState() { }
+
+        private void InitializeECS() {
+            var world = World.DefaultGameObjectInjectionWorld;
+            var entityManager = world.EntityManager;
+
+            // Create player entity
+            var playerEntity = entityManager.CreateEntity(
+                typeof(PlayerData),
+                typeof(InputData)
+            );
+
+            // Initialize player data
+            entityManager.SetComponentData(playerEntity, new PlayerData
+            {
+                Velocity = float3.zero,
+                Speed = 1f
+            });
+
+            // Initialize input data
+            entityManager.SetComponentData(playerEntity, new InputData
+            {
+                MoveDirection = float3.zero
+            });
+        }
 
         private async UniTask LoadScenes() {
             // await LoadScene("Maps/Home");

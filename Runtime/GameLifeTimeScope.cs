@@ -1,4 +1,5 @@
-﻿using Darkness.Runtime.Log;
+﻿using Darkness.Runtime.Gameplay;
+using Darkness.Runtime.Log;
 using Darkness.Runtime.Messages;
 using Darkness.Runtime.Utils.Resource;
 using MessagePipe;
@@ -28,6 +29,7 @@ namespace Darkness.Runtime {
             builder.Register<AddressableLoader>(Lifetime.Singleton);
 
             builder.RegisterEntryPoint<Boot>();
+            builder.RegisterEntryPoint<InputHandler>();
         }
     }
 }
