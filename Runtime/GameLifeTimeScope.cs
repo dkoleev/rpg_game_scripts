@@ -1,6 +1,8 @@
-﻿using Darkness.Runtime.Gameplay;
+﻿using Darkness.Runtime.ECS.Systems;
+using Darkness.Runtime.Gameplay;
 using Darkness.Runtime.Log;
 using Darkness.Runtime.Messages;
+using Darkness.Runtime.Presentation;
 using Darkness.Runtime.Utils.Resource;
 using MessagePipe;
 using VContainer;
@@ -27,9 +29,12 @@ namespace Darkness.Runtime {
 
             builder.Register<GameLogger>(Lifetime.Singleton);
             builder.Register<AddressableLoader>(Lifetime.Singleton);
+            builder.Register<EntityViewManager>(Lifetime.Singleton);
 
             builder.RegisterEntryPoint<Boot>();
             builder.RegisterEntryPoint<InputHandler>();
+
+            // builder.RegisterSystemFromDefaultWorld<EntityViewSyncSystem>();
         }
     }
 }

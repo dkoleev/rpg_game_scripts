@@ -2,7 +2,7 @@
 using UnityEngine.InputSystem;
 
 namespace Darkness.Runtime.Presentation {
-    public class PlayerMovement : MonoBehaviour {
+    public class PlayerMovementObsolete : MonoBehaviour {
         private static readonly int IsMovingAnimProperty = Animator.StringToHash("IsMoving");
         private static readonly int AttackAnimProperty = Animator.StringToHash("Attack");
         [SerializeField] private float moveSpeed = 5f;

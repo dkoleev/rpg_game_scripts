@@ -3,6 +3,7 @@ using Unity.Mathematics;
 
 namespace Darkness.Runtime.ECS.Components {
     public struct InputData : IComponentData {
-        public float3 MoveDirection;
+        public float2 MoveValue;
+        public bool Attack;
     }
 }

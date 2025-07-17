@@ -20,19 +20,43 @@ namespace Darkness.Runtime.Gameplay {
             _playerInput.Enable();
             _playerInput.Player.Move.performed += MovePreformed;
             _playerInput.Player.Move.canceled += MoveCanceled;
+            _playerInput.Player.Attack.started += AttackPerformed;
+            _playerInput.Player.Attack.canceled += AttackCancelled;
             
             _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
             _playerEntity = _entityManager.CreateEntityQuery(typeof(InputData)).GetSingletonEntity();
         }
+        
+        private void AttackPerformed(InputAction.CallbackContext context) {
+            if (!_entityManager.Exists(_playerEntity)) {
+                return;
+            }
+
+            var inputData = _entityManager.GetComponentData<InputData>(_playerEntity);
+            inputData.Attack = true;
+            _entityManager.SetComponentData(_playerEntity, inputData);
+        }
+        
+        private void AttackCancelled(InputAction.CallbackContext context) {
+            if (!_entityManager.Exists(_playerEntity)) {
+                return;
+            }
+
+            var inputData = _entityManager.GetComponentData<InputData>(_playerEntity);
+            inputData.Attack = false;
+            _entityManager.SetComponentData(_playerEntity, inputData);
+        }
+
 
         private void MoveCanceled(InputAction.CallbackContext obj) {
             if (!_entityManager.Exists(_playerEntity)) {
                 return;
             }
 
-            _entityManager.SetComponentData(_playerEntity,
-                new InputData { MoveDirection = float3.zero });
+            var inputData = _entityManager.GetComponentData<InputData>(_playerEntity);
+            inputData.MoveValue = float2.zero;
             
+            _entityManager.SetComponentData(_playerEntity, inputData);
         }
 
         private void MovePreformed(InputAction.CallbackContext context) {
@@ -41,12 +65,16 @@ namespace Darkness.Runtime.Gameplay {
             }
 
             var inputValue = context.ReadValue<Vector2>();
-            _entityManager.SetComponentData(_playerEntity,
-                new InputData { MoveDirection = new float3(inputValue.x, inputValue.y, 0) });
+            var inputData = _entityManager.GetComponentData<InputData>(_playerEntity);
+            inputData.MoveValue = new float2(inputValue.x, inputValue.y);
+            _entityManager.SetComponentData(_playerEntity, inputData);
         }
 
         public void Dispose() {
             _playerInput.Player.Move.performed -= MovePreformed;
+            _playerInput.Player.Move.canceled -= MoveCanceled;
+            _playerInput.Player.Attack.performed -= AttackPerformed;
+            _playerInput.Player.Attack.canceled -= AttackCancelled;
             _playerInput.Disable();        
         }
     }
