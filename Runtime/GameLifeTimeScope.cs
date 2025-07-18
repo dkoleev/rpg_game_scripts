@@ -34,7 +34,7 @@ namespace Darkness.Runtime {
             builder.RegisterEntryPoint<Boot>();
             builder.RegisterEntryPoint<InputHandler>();
 
-            // builder.RegisterSystemFromDefaultWorld<EntityViewSyncSystem>();
+            builder.RegisterSystemFromDefaultWorld<EntityViewSyncSystem>();
         }
     }
 }

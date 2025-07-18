@@ -10,7 +10,7 @@ using PlayerInput = Darkness.Runtime.Input.PlayerInput;
 
 namespace Darkness.Runtime.Gameplay {
     [UsedImplicitly]
-    public class InputHandler : IStartable, IDisposable {
+    public class InputHandler : IStartable, IDisposable, ITickable {
         private EntityManager _entityManager;
         private Entity _playerEntity;
         private PlayerInput _playerInput;
@@ -76,6 +76,22 @@ namespace Darkness.Runtime.Gameplay {
             _playerInput.Player.Attack.performed -= AttackPerformed;
             _playerInput.Player.Attack.canceled -= AttackCancelled;
             _playerInput.Disable();        
+        }
+
+        public void Tick() {
+            CheckForInteract();
+        }
+        
+        private void CheckForInteract() {
+            var inputData = _entityManager.GetComponentData<InputData>(_playerEntity);
+            if (_playerInput.Player.Interact.WasPressedThisFrame()) {
+                inputData.InteractPressed = true;
+                _entityManager.SetComponentData(_playerEntity, inputData);
+            }
+            else if(inputData.InteractPressed) {
+                inputData.InteractPressed = false;
+                _entityManager.SetComponentData(_playerEntity, inputData);
+            }
         }
     }
 }

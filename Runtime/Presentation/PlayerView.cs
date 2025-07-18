@@ -31,7 +31,6 @@ namespace Darkness.Runtime.Presentation {
             }
 
             var animationData = _entityManager.GetComponentData<PlayerAnimationData>(_playerEntity);
-
             if (animationData.Attacking) {
                 PlayAttackAnimation();
             }

@@ -1,7 +1,10 @@
 ﻿using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using Darkness.Runtime.ECS.Components;
 using Darkness.Runtime.ECS.Components.Tags;
+using Darkness.Runtime.Log;
 using Darkness.Runtime.Presentation;
+using Darkness.Runtime.Utils.Resource;
 using Unity.Entities;
 using UnityEngine;
 using VContainer;
@@ -9,42 +12,37 @@ using VContainer;
 namespace Darkness.Runtime.ECS.Systems {
     public partial class EntityViewSyncSystem : SystemBase {
         private Entity _registryEntity;
-        private GameObject _prefab;
         private EntityViewManager _entityViewManager;
+        private GameLogger _gameLogger;
 
         [Inject]
-        public void Construct(EntityViewManager entityViewManager) {
+        public void Construct(EntityViewManager entityViewManager, GameLogger gameLogger) {
             _entityViewManager = entityViewManager;
+            _gameLogger = gameLogger;
         }
 
-        protected override void OnCreate() {
-            // Load your visual prefab (replace with Addressables if needed)
-            _prefab = Resources.Load<GameObject>("VisualPrefab"); // Make sure prefab exists in Resources
-        }
+        protected override void OnCreate() { }
 
         protected override void OnUpdate() {
             if (_entityViewManager is null) {
+                //_gameLogger.Warning($"{nameof(EntityViewSyncSystem)}: {nameof(EntityViewManager)} is null");
                 return;
             }
-            
+
             var entityManager = EntityManager;
 
             // 1. Create views for new entities
             Entities
                 .WithNone<ViewLinkedTag>()
-                .ForEach((Entity entity, in EntityViewData entityViewData, in PositionData positionData) => {
+                .ForEach((Entity entity, in EntityViewData entityViewData) => {
                     if (_entityViewManager.HasView(entity)) {
                         return;
                     }
 
-                    var go = Object.Instantiate(_prefab);
-                    go.transform.position = new Vector3(positionData.Position.x, positionData.Position.y, 0f);
-
-                    var view = go.AddComponent<EntityView>();
-                    view.Entity = entity;
-
-                    _entityViewManager.Register(entity, go);
-                    // Tag to mark view created
+                    var isNPC = entityManager.HasComponent<NPCData>(entity);
+                    var entityType = isNPC ? EntityType.NPC : EntityType.Player;
+                    _entityViewManager.Register(
+                        entity, entityType, entityViewData.PrefabPath.ToString(), entityViewData.SpawnPosition).Forget();
                     entityManager.AddComponent<ViewLinkedTag>(entity);
                 }).WithStructuralChanges().WithoutBurst().Run();
 

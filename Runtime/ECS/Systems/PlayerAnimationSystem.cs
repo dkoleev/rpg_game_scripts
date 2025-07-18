@@ -1,9 +1,11 @@
 ﻿using Darkness.Runtime.ECS.Components;
+using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
 namespace Darkness.Runtime.ECS.Systems {
+    [BurstCompile]
     public partial struct PlayerAnimationSystem : ISystem {
         public void OnUpdate(ref SystemState state) {
             foreach (var (playerAnimationData, inputData)

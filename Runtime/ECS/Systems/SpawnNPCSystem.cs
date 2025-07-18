@@ -1,42 +1,58 @@
 ﻿using Darkness.Runtime.ECS.Components;
+using Darkness.Runtime.ECS.Components.Tags;
 using Unity.Entities;
 
 namespace Darkness.Runtime.ECS.Systems {
+    [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class SpawnNPCSystem : SystemBase {
         private EntityArchetype _npcArchetype;
+        private EndSimulationEntityCommandBufferSystem _endSimulationEcbSystem;
 
         protected override void OnCreate() {
+            // Cache the EndSimulationEntityCommandBufferSystem for efficient reuse
+            _endSimulationEcbSystem = World.GetOrCreateSystemManaged<EndSimulationEntityCommandBufferSystem>();
+
+            // Create archetype with all required components
             _npcArchetype = EntityManager.CreateArchetype(
-                typeof(NPCData)
+                typeof(NPCData),
+                typeof(EntityViewData)
+                // ViewLinkedTag will be added by EntityViewSyncSystem
             );
         }
 
         protected override void OnUpdate() {
-            var entityManager = EntityManager;
+            // Get the command buffer from the ECB system
+            var ecb = _endSimulationEcbSystem.CreateCommandBuffer();
+            var npcArchetype = _npcArchetype;
 
-            // Use Entity Command Buffer for thread-safe entity operations
-            var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
+            // Process spawn points that haven't spawned an NPC yet
+            Entities
+                .WithName("SpawnNPCFromSpawnPoints")
+                .WithNone<ProcessedSpawnPointTag>()
+                .ForEach((Entity spawnPointEntity, ref SpawnPointData spawnPoint) => {
+                    // Create NPC entity
+                    var npcEntity = ecb.CreateEntity(npcArchetype);
 
-            // Query all entities with SpawnPointComponent that haven't spawned anything yet
-            Entities.WithoutBurst().ForEach((Entity spawnPointEntity, ref SpawnPointData spawnPoint) => {
-                if (spawnPoint.SpawnedEntity != Entity.Null) {
-                    return; // Skip already processed spawn points
-                }
+                    // Set NPC components
+                    ecb.SetComponent(npcEntity, new NPCData());
 
-                var npcEntity = ecb.CreateEntity(_npcArchetype);
-                ecb.SetComponent(npcEntity, new NPCData {
-                    Position = spawnPoint.SpawnPosition,
-                });
+                    // Set view data for synchronization with GameObject world
+                    ecb.SetComponent(npcEntity, new EntityViewData {
+                        PrefabPath = spawnPoint.PrefabPath,
+                        SpawnPosition = spawnPoint.SpawnPosition,
+                        Entity = npcEntity // Correctly reference the entity itself
+                    });
 
-                spawnPoint.SpawnedEntity = npcEntity;
-                ecb.SetComponent(spawnPointEntity, spawnPoint);
+                    // Update spawn point with reference to created entity
+                    spawnPoint.SpawnedEntity = npcEntity;
+                    ecb.SetComponent(spawnPointEntity, spawnPoint);
 
-            }).Run();
+                    // Mark spawn point as processed
+                    ecb.AddComponent<ProcessedSpawnPointTag>(spawnPointEntity);
+                }).WithoutBurst().Schedule();
 
-            // Play back all commands to ensure thread safety
-            ecb.Playback(entityManager);
-            ecb.Dispose();
-
+            // Ensure the ECB system knows we scheduled work for it
+            _endSimulationEcbSystem.AddJobHandleForProducer(Dependency);
         }
     }
 }

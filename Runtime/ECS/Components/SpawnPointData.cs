@@ -6,6 +6,6 @@ namespace Darkness.Runtime.ECS.Components {
     public struct SpawnPointData : IComponentData {
         public float2 SpawnPosition;
         public Entity SpawnedEntity;
-        public FixedString64Bytes CharacterId;
+        public FixedString64Bytes PrefabPath;
     }
 }

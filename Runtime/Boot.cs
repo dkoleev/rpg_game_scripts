@@ -3,6 +3,7 @@ using System.IO;
 using Cysharp.Threading.Tasks;
 using Darkness.Runtime.Core;
 using Darkness.Runtime.ECS.Components;
+using Darkness.Runtime.ECS.Components.Tags;
 using Darkness.Runtime.Log;
 using Darkness.Runtime.Utils.Resource;
 using DG.Tweening;
@@ -40,7 +41,7 @@ namespace Darkness.Runtime {
             
             InitializeECS();
             await LoadScenes();
-            await SpawnCharacters();            
+            SpawnCharacters();            
             InitializeCamera(GameObject.FindWithTag("Player").transform);
         }
 
@@ -48,6 +49,7 @@ namespace Darkness.Runtime {
             var world = World.DefaultGameObjectInjectionWorld;
             var entityManager = world.EntityManager;
             var playerArchetype = entityManager.CreateArchetype(
+                typeof(PlayerTag),
                 typeof(PlayerData),
                 typeof(InputData),
                 typeof(PlayerAnimationData)
@@ -83,7 +85,9 @@ namespace Darkness.Runtime {
             await LoadScene("Dialogues");
         }
 
-        private async UniTask SpawnCharacters() {
+        private void SpawnCharacters() {
+            var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            
             var player = GameObject.FindWithTag("Player");
             var spawnPoints = GameObject.FindGameObjectsWithTag("SpawnPoint");
             foreach (var point in spawnPoints) {
@@ -94,15 +98,11 @@ namespace Darkness.Runtime {
                         player.transform.position = point.transform.position;
                     }
                     else {
-                        var prefabResult = await _addressableLoader
-                            .LoadAddressable<GameObject>($"Characters/{characterId}.prefab").Await();
-                        prefabResult.Match(
-                            prefab => {
-                                var instance = Object.Instantiate(prefab, Vector3.zero, Quaternion.identity);
-                                instance.transform.position = point.transform.position;
-                            },
-                            Debug.LogError
-                        );
+                        var spawnPointEntity = entityManager.CreateEntity();
+                        entityManager.AddComponentData(spawnPointEntity, new SpawnPointData {
+                            SpawnPosition = new float2(point.transform.position.x, point.transform.position.y),
+                            PrefabPath = $"Characters/{characterId}.prefab"
+                        });
                     }
                 }
             }
