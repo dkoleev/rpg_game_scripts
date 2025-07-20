@@ -6,7 +6,16 @@ using Unity.Entities;
 namespace Darkness.Runtime.ECS.Systems {
     [BurstCompile]
     public partial struct DialogueTriggerSystem : ISystem {
+        private EntityQuery _dialogueTriggerQuery;
+        public void OnCreate(ref SystemState state) {
+            _dialogueTriggerQuery = SystemAPI.QueryBuilder().WithAll<DialogueInProgressTag>().Build();
+        }
+
         public void OnUpdate(ref SystemState state) {
+            if (!_dialogueTriggerQuery.IsEmpty) {
+                return;
+            }
+            
             foreach (var (inputData, closestNPC, playerEntity) in 
                      SystemAPI.Query<RefRO<InputData>, RefRO<ClosestNPC>>().
                          WithAll<PlayerTag>().

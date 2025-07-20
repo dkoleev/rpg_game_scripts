@@ -13,7 +13,7 @@ namespace Darkness.Runtime.ECS.Systems {
 
         public void OnUpdate(ref SystemState state) {
             var fixedDeltaTime = SystemAPI.Time.fixedDeltaTime;
-            foreach (var (playerData, inputData) in SystemAPI.Query<RefRW<PlayerData>, RefRO<InputData>>()) {
+            foreach (var (playerData, inputData) in SystemAPI.Query<RefRW<MovementData>, RefRO<InputData>>()) {
                 playerData.ValueRW.Velocity = inputData.ValueRO.MoveValue * playerData.ValueRO.Speed * fixedDeltaTime;
             }
         }

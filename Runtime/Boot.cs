@@ -39,40 +39,10 @@ namespace Darkness.Runtime {
             LoadGameData();
             LoadPlayerState();
             
-            InitializeECS();
             await LoadScenes();
             SpawnCharacters();            
-            InitializeCamera(GameObject.FindWithTag("Player").transform);
         }
-
-        private void InitializeECS() {
-            var world = World.DefaultGameObjectInjectionWorld;
-            var entityManager = world.EntityManager;
-            var playerArchetype = entityManager.CreateArchetype(
-                typeof(PlayerTag),
-                typeof(PlayerData),
-                typeof(InputData),
-                typeof(PlayerAnimationData)
-            );
-            // Create player entity
-            var playerEntity = entityManager.CreateEntity(playerArchetype);
-            // Initialize player data
-            entityManager.SetComponentData(playerEntity, new PlayerData
-            {
-                Velocity = float2.zero,
-                Speed = 50f
-            });
-            // Initialize input data
-            entityManager.SetComponentData(playerEntity, new InputData
-            {
-                MoveValue = float2.zero
-            });
-            entityManager.SetComponentData(playerEntity, new PlayerAnimationData
-            {
-                Moving = false
-            });
-        }
-
+        
         private void LoadGameData() { }
 
         private void LoadPlayerState() { }
@@ -80,26 +50,32 @@ namespace Darkness.Runtime {
         private async UniTask LoadScenes() {
             // await LoadScene("Maps/Home");
             await LoadScene("Maps/Introduction");
-            await LoadScene("CameraAndLighting");
-            await LoadScene("Player");
+            await LoadScene("CameraLightEvents");
             await LoadScene("Dialogues");
+            SceneManager.SetActiveScene(SceneManager.GetSceneByName("Introduction"));
         }
 
         private void SpawnCharacters() {
             var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
             
-            var player = GameObject.FindWithTag("Player");
             var spawnPoints = GameObject.FindGameObjectsWithTag("SpawnPoint");
             foreach (var point in spawnPoints) {
                 var scp = point.GetComponent<SuperCustomProperties>();
                 if (scp.TryGetCustomProperty("character", out var character)) {
                     var characterId = character.m_Value;
                     if (characterId == "Player") {
-                        player.transform.position = point.transform.position;
+                        var spawnPointEntity = entityManager.CreateEntity();
+                        //TODO: get player view data from spawn point
+                        entityManager.AddComponentData(spawnPointEntity, new SpawnPointData {
+                            IsPlayerSpawnPoint = true,
+                            SpawnPosition = new float2(point.transform.position.x, point.transform.position.y),
+                            PrefabPath = $"Characters/Warrior.prefab"
+                        });
                     }
                     else {
                         var spawnPointEntity = entityManager.CreateEntity();
                         entityManager.AddComponentData(spawnPointEntity, new SpawnPointData {
+                            IsPlayerSpawnPoint = false,
                             SpawnPosition = new float2(point.transform.position.x, point.transform.position.y),
                             PrefabPath = $"Characters/{characterId}.prefab"
                         });

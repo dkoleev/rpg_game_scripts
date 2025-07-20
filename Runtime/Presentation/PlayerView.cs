@@ -8,12 +8,13 @@ namespace Darkness.Runtime.Presentation {
         private static readonly int IsMovingAnimProperty = Animator.StringToHash("IsMoving");
         private static readonly int AttackAnimProperty = Animator.StringToHash("Attack");
 
+        public Entity Entity;
+        
         private Rigidbody2D _rb;
         private SpriteRenderer _characterSprite;
         private Animator _characterAnimator;
 
         private EntityManager _entityManager;
-        private Entity _playerEntity;
 
         private void Start() {
             _rb = GetComponent<Rigidbody2D>();
@@ -22,15 +23,14 @@ namespace Darkness.Runtime.Presentation {
             
             var world = World.DefaultGameObjectInjectionWorld;
             _entityManager = world.EntityManager;
-            _playerEntity = _entityManager.CreateEntityQuery(typeof(PlayerData)).GetSingletonEntity();
         }
 
         private void Update() {
-            if (!_entityManager.Exists(_playerEntity)) {
+            if (!_entityManager.Exists(Entity)) {
                 return;
             }
 
-            var animationData = _entityManager.GetComponentData<PlayerAnimationData>(_playerEntity);
+            var animationData = _entityManager.GetComponentData<AnimationData>(Entity);
             if (animationData.Attacking) {
                 PlayAttackAnimation();
             }
@@ -39,16 +39,16 @@ namespace Darkness.Runtime.Presentation {
             }
         }
 
-        private void PlayMoveAnimation(PlayerAnimationData animationData) {
+        private void PlayMoveAnimation(AnimationData animationData) {
             _characterAnimator.SetBool(IsMovingAnimProperty, animationData.Moving);
         }
 
         private void FixedUpdate() {
-            if (!_entityManager.Exists(_playerEntity)) {
+            if (!_entityManager.Exists(Entity)) {
                 return;
             }
 
-            var playerData = _entityManager.GetComponentData<PlayerData>(_playerEntity);
+            var playerData = _entityManager.GetComponentData<MovementData>(Entity);
             // _rb.MovePosition(new Vector2(playerData.Position.x, playerData.Position.y)); // Physics-based position update
             _rb.linearVelocity = new Vector2(playerData.Velocity.x, playerData.Velocity.y); // Physics-based position update
             

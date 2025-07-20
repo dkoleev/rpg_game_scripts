@@ -4,9 +4,8 @@ using Darkness.Runtime.ECS.Components;
 using Darkness.Runtime.ECS.Components.Tags;
 using Darkness.Runtime.Log;
 using Darkness.Runtime.Presentation;
-using Darkness.Runtime.Utils.Resource;
 using Unity.Entities;
-using UnityEngine;
+using Unity.Mathematics;
 using VContainer;
 
 namespace Darkness.Runtime.ECS.Systems {
@@ -34,17 +33,26 @@ namespace Darkness.Runtime.ECS.Systems {
             // 1. Create views for new entities
             Entities
                 .WithNone<ViewLinkedTag>()
-                .ForEach((Entity entity, in EntityViewData entityViewData) => {
+                .ForEach((Entity entity, in EntityViewData entityViewData, in PositionData positionData) => {
                     if (_entityViewManager.HasView(entity)) {
                         return;
                     }
 
-                    var isNPC = entityManager.HasComponent<NPCData>(entity);
+                    var isNPC = entityManager.HasComponent<NPCTag>(entity);
                     var entityType = isNPC ? EntityType.NPC : EntityType.Player;
                     _entityViewManager.Register(
-                        entity, entityType, entityViewData.PrefabPath.ToString(), entityViewData.SpawnPosition).Forget();
+                        entity, entityType, entityViewData.PrefabPath.ToString(), positionData.Position).Forget();
                     entityManager.AddComponent<ViewLinkedTag>(entity);
                 }).WithStructuralChanges().WithoutBurst().Run();
+
+            Entities.WithAll<ViewLinkedTag>().ForEach((Entity entity, ref PositionData positionData) => {
+                if (!_entityViewManager.HasView(entity)) {
+                    return;
+                }
+
+                var view = _entityViewManager.Views[entity];
+                positionData.Position = new float2(view.transform.position.x, view.transform.position.y);
+            }).WithoutBurst().Run();
 
             // 2. Destroy views if entity no longer exists
             var toRemove = new List<Entity>();

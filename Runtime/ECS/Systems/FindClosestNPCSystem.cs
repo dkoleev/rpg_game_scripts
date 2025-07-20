@@ -26,7 +26,7 @@ namespace Darkness.Runtime.ECS.Systems {
             var closestNPCDistance = float.MaxValue;
             foreach (var (npcPositionData, entity) in SystemAPI.Query<RefRO<PositionData>>().WithAll<NPCTag>().WithEntityAccess()) {
                 var distance = math.distancesq(playerPosition, npcPositionData.ValueRO.Position);
-                if (distance < 4 && distance < closestNPCDistance) {
+                if (distance < 2 && distance < closestNPCDistance) {
                     closestNPC = entity;
                     closestNPCDistance = distance;
                 }

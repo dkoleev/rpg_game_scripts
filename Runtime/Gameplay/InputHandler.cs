@@ -12,8 +12,9 @@ namespace Darkness.Runtime.Gameplay {
     [UsedImplicitly]
     public class InputHandler : IStartable, IDisposable, ITickable {
         private EntityManager _entityManager;
-        private Entity _playerEntity;
         private PlayerInput _playerInput;
+        private Entity _playerEntity;
+        private EntityQuery _playerInputQuery;
 
         void IStartable.Start() {
             _playerInput = new PlayerInput();
@@ -24,7 +25,7 @@ namespace Darkness.Runtime.Gameplay {
             _playerInput.Player.Attack.canceled += AttackCancelled;
             
             _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-            _playerEntity = _entityManager.CreateEntityQuery(typeof(InputData)).GetSingletonEntity();
+            _playerInputQuery = _entityManager.CreateEntityQuery(typeof(InputData));
         }
         
         private void AttackPerformed(InputAction.CallbackContext context) {
@@ -79,18 +80,27 @@ namespace Darkness.Runtime.Gameplay {
         }
 
         public void Tick() {
+            if (_playerEntity == Entity.Null) {
+                if (_playerInputQuery.IsEmpty) {
+                    return;
+                }
+            
+                _playerEntity = _playerInputQuery.GetSingletonEntity();
+            }
+            
             CheckForInteract();
         }
         
         private void CheckForInteract() {
-            var inputData = _entityManager.GetComponentData<InputData>(_playerEntity);
+            var playerEntity = _playerInputQuery.GetSingletonEntity();
+            var inputData = _entityManager.GetComponentData<InputData>(playerEntity);
             if (_playerInput.Player.Interact.WasPressedThisFrame()) {
                 inputData.InteractPressed = true;
-                _entityManager.SetComponentData(_playerEntity, inputData);
+                _entityManager.SetComponentData(playerEntity, inputData);
             }
             else if(inputData.InteractPressed) {
                 inputData.InteractPressed = false;
-                _entityManager.SetComponentData(_playerEntity, inputData);
+                _entityManager.SetComponentData(playerEntity, inputData);
             }
         }
     }

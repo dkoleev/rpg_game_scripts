@@ -4,6 +4,7 @@ using Unity.Mathematics;
 
 namespace Darkness.Runtime.ECS.Components {
     public struct SpawnPointData : IComponentData {
+        public bool IsPlayerSpawnPoint;
         public float2 SpawnPosition;
         public Entity SpawnedEntity;
         public FixedString64Bytes PrefabPath;

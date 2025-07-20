@@ -2,7 +2,7 @@
 using Unity.Mathematics;
 
 namespace Darkness.Runtime.ECS.Components {
-    public struct PlayerData : IComponentData {
+    public struct MovementData : IComponentData {
         public float2 Velocity;
         public float Speed;
     }
