@@ -5,7 +5,7 @@ using Unity.Mathematics;
 
 namespace Darkness.Runtime.ECS.Systems {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    public partial class SpawnNPCSystem : SystemBase {
+    public partial class SpawnSystem : SystemBase {
         private EntityArchetype _npcArchetype;
         private EntityArchetype _playerArchetype;
         private EndSimulationEntityCommandBufferSystem _endSimulationEcbSystem;

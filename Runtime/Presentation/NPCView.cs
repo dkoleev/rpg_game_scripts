@@ -54,7 +54,7 @@ namespace Darkness.Runtime.Presentation {
                 return;
             }
 
-            _dialogueSystemTrigger.OnUse();    
+            DialogueManager.instance.StartConversation("introduction", transform);
         }
 
         private void OnDestroy() {

@@ -1,6 +1,7 @@
 ﻿using Darkness.Runtime.ECS.Components;
 using Darkness.Runtime.ECS.Components.Tags;
 using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
 
 namespace Darkness.Runtime.ECS.Systems {
@@ -12,9 +13,11 @@ namespace Darkness.Runtime.ECS.Systems {
         }
 
         public void OnUpdate(ref SystemState state) {
-            if (!_dialogueTriggerQuery.IsEmpty) {
+            if (!_dialogueTriggerQuery.IsEmptyIgnoreFilter) {
                 return;
             }
+
+            var ecb = new EntityCommandBuffer(Allocator.Temp);
             
             foreach (var (inputData, closestNPC, playerEntity) in 
                      SystemAPI.Query<RefRO<InputData>, RefRO<ClosestNPC>>().
@@ -22,9 +25,12 @@ namespace Darkness.Runtime.ECS.Systems {
                          WithNone<DialogueInProgressTag>().
                          WithEntityAccess()) {
                 if (inputData.ValueRO.InteractPressed && closestNPC.ValueRO.NPC != Entity.Null) {
-                    state.EntityManager.AddComponentData(closestNPC.ValueRO.NPC, new DialogueInProgressTag());
+                    ecb.AddComponent<DialogueInProgressTag>(closestNPC.ValueRO.NPC);
                 }
             }
+            
+            ecb.Playback(state.EntityManager);
+            ecb.Dispose();
         }
     }
 }
