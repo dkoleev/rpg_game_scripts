@@ -22,38 +22,32 @@ namespace Darkness.Runtime.Presentation {
         }
 
         public async UniTask Register(Entity entity, EntityType entityType, string prefabPath, Vector2 spawnPosition) {
-            var rootPrefab =  
-                await _addressableLoader.LoadAddressable<GameObject>(entityType == EntityType.Player ? PlayerRootPath : NPCRootPath).Await();
-
-            if (entityType == EntityType.Player) {
-                InitializeCamera(rootPrefab.Value.transform);
-            }
-
             var prefabResult = await _addressableLoader.LoadAddressable<GameObject>(prefabPath).Await();
             prefabResult.Match(
                 prefab => {
-                    var instance = Object.Instantiate(rootPrefab.Value, Vector3.zero, Quaternion.identity);
-                    instance.transform.position = spawnPosition;
-                    var entityView = instance.AddComponent<EntityView>();
+                    var viewInstance = Object.Instantiate(prefab, spawnPosition, Quaternion.identity);
+                    
+                    var entityView = viewInstance.AddComponent<EntityView>();
                     switch (entityType) {
                         case EntityType.Player: {
-                            var playerView = instance.AddComponent<PlayerView>();
+                            var playerView = viewInstance.AddComponent<PlayerView>();
                             playerView.Entity = entity;
                             break;
                         }
                         case EntityType.NPC: {
-                            var npcView = instance.AddComponent<NPCView>();
+                            var npcView = viewInstance.AddComponent<NPCView>();
                             npcView.Entity = entity;
                             break;
                         }
                     }
+                    
                     entityView.Entity = entity;
                     
-                    var viewInstance = Object.Instantiate(prefab, instance.transform);
-                    viewInstance.transform.localPosition = Vector3.zero;
-                    viewInstance.transform.localRotation = Quaternion.identity;
+                    if (entityType == EntityType.Player) {
+                        InitializeCamera(viewInstance.transform);
+                    }
                     
-                    _views[entity] = instance;
+                    _views[entity] = viewInstance;
                 },
                 Debug.LogError
             );
