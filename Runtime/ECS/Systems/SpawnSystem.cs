@@ -20,7 +20,8 @@ namespace Darkness.Runtime.ECS.Systems {
                 typeof(InputData),
                 typeof(AnimationData),
                 typeof(PositionData),
-                typeof(EntityViewData)
+                typeof(EntityViewData),
+                typeof(CombatData)
             );
 
             // Create archetype with all required components
@@ -65,6 +66,10 @@ namespace Darkness.Runtime.ECS.Systems {
                         ecb.SetComponent(playerEntity, new AnimationData
                         {
                             Moving = false
+                        });
+                        ecb.SetComponent(playerEntity, new CombatData {
+                            AttackInProgress = false,
+                            AttackTime = 0f
                         });
                         ecb.SetComponent(playerEntity, new EntityViewData {
                             PrefabPath = spawnPoint.PrefabPath,

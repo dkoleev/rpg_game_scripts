@@ -17,6 +17,7 @@ namespace Darkness.Runtime.Presentation {
         private Animator _characterAnimator;
 
         private EntityManager _entityManager;
+        private bool _attackAnimationTriggered;
 
         private void Start() {
             _rb = GetComponent<Rigidbody2D>();
@@ -33,10 +34,16 @@ namespace Darkness.Runtime.Presentation {
             }
 
             var animationData = _entityManager.GetComponentData<AnimationData>(Entity);
-            if (animationData.Attacking) {
-                PlayAttackAnimation();
+            var combatData = _entityManager.GetComponentData<CombatData>(Entity);
+
+            if (combatData.AttackInProgress) {
+                if (!_attackAnimationTriggered) {
+                    PlayAttackAnimation();
+                    _attackAnimationTriggered = true;
+                }
             }
             else {
+                _attackAnimationTriggered = false;
                 PlayMoveAnimation(animationData);
             }
         }
