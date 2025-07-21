@@ -5,8 +5,10 @@ using UnityEngine;
 
 namespace Darkness.Runtime.Presentation {
     public class PlayerView : MonoBehaviour {
-        private static readonly int IsMovingAnimProperty = Animator.StringToHash("IsMoving");
+        private static readonly int WalkingAnimProperty = Animator.StringToHash("Walking");
+        private static readonly int RunningAnimProperty = Animator.StringToHash("Running");
         private static readonly int AttackAnimProperty = Animator.StringToHash("Attack");
+        private static readonly int MoveSpeedAnimProperty = Animator.StringToHash("MoveSpeed");
 
         public Entity Entity;
         
@@ -40,7 +42,7 @@ namespace Darkness.Runtime.Presentation {
         }
 
         private void PlayMoveAnimation(AnimationData animationData) {
-            _characterAnimator.SetBool(IsMovingAnimProperty, animationData.Moving);
+            _characterAnimator.SetBool(RunningAnimProperty, animationData.Moving);
         }
 
         private void FixedUpdate() {
@@ -50,7 +52,10 @@ namespace Darkness.Runtime.Presentation {
 
             var playerData = _entityManager.GetComponentData<MovementData>(Entity);
             // _rb.MovePosition(new Vector2(playerData.Position.x, playerData.Position.y)); // Physics-based position update
-            _rb.linearVelocity = new Vector2(playerData.Velocity.x, playerData.Velocity.y); // Physics-based position update
+            var velocity = new Vector2(playerData.Velocity.x, playerData.Velocity.y);
+            _rb.linearVelocity = velocity; // Physics-based position update
+            
+            _characterAnimator.SetFloat(MoveSpeedAnimProperty, velocity.magnitude);
             
             if (playerData.Velocity.x != 0) _characterSprite.flipX = playerData.Velocity.x < 0;
         }
