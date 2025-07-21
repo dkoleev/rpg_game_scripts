@@ -11,7 +11,6 @@ namespace Darkness.Runtime.Presentation {
     public class NPCView : MonoBehaviour {
         public Entity Entity;
         
-        private DialogueSystemTrigger _dialogueSystemTrigger;
         private GameLogger _gameLogger;
         private Entity _npcEntity;
         private EntityManager _entityManager;
@@ -21,10 +20,6 @@ namespace Darkness.Runtime.Presentation {
             _gameLogger = gameLogger;
         }
         
-        private void Awake() {
-            _dialogueSystemTrigger = GetComponent<DialogueSystemTrigger>();
-        }
-
         private void Start() {
             _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
             DialogueManager.instance.conversationEnded += OnConversationEnded;
@@ -49,11 +44,6 @@ namespace Darkness.Runtime.Presentation {
                 return;
             }
             
-            if (_dialogueSystemTrigger is null) {
-                _gameLogger.Warning("DialogueSystemTrigger is null", gameObject);
-                return;
-            }
-
             DialogueManager.instance.StartConversation("introduction", transform);
         }
 
