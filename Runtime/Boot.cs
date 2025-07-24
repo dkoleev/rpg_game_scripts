@@ -69,7 +69,7 @@ namespace Darkness.Runtime {
                         entityManager.AddComponentData(spawnPointEntity, new SpawnPointData {
                             IsPlayerSpawnPoint = true,
                             SpawnPosition = new float2(point.transform.position.x, point.transform.position.y),
-                            PrefabPath = $"Characters/JoannaDark.prefab"
+                            PrefabPath = $"Characters/Fantasy/JoannaDark.prefab"
                         });
                     }
                     else {
@@ -77,7 +77,7 @@ namespace Darkness.Runtime {
                         entityManager.AddComponentData(spawnPointEntity, new SpawnPointData {
                             IsPlayerSpawnPoint = false,
                             SpawnPosition = new float2(point.transform.position.x, point.transform.position.y),
-                            PrefabPath = $"Characters/{characterId}.prefab"
+                            PrefabPath = $"Characters/Fantasy/{characterId}.prefab"
                         });
                     }
                 }

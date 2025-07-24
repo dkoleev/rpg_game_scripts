@@ -8,6 +8,8 @@ namespace Darkness.Runtime.Presentation {
         private static readonly int WalkingAnimProperty = Animator.StringToHash("Walking");
         private static readonly int RunningAnimProperty = Animator.StringToHash("Running");
         private static readonly int AttackAnimProperty = Animator.StringToHash("Attack");
+        private static readonly int SlowAttackAnimProperty = Animator.StringToHash("SlowAttack");
+        private static readonly int RollAnimProperty = Animator.StringToHash("Roll");
         private static readonly int MoveSpeedAnimProperty = Animator.StringToHash("MoveSpeed");
 
         public Entity Entity;
@@ -36,9 +38,16 @@ namespace Darkness.Runtime.Presentation {
             var animationData = _entityManager.GetComponentData<AnimationData>(Entity);
             var combatData = _entityManager.GetComponentData<CombatData>(Entity);
 
-            if (combatData.AttackInProgress) {
+            if (combatData.ActionInProgress) {
                 if (!_attackAnimationTriggered) {
-                    PlayAttackAnimation();
+                    if (combatData.IsSlowAttack) {
+                        PlaySlowAttackAnimation();
+                    }
+                    else if(combatData.IsAttack) {
+                        PlayAttackAnimation();
+                    }else if (combatData.IsRoll) {
+                        PlayRollAnimation();
+                    }
                     _attackAnimationTriggered = true;
                 }
             }
@@ -69,6 +78,14 @@ namespace Darkness.Runtime.Presentation {
         
         private void PlayAttackAnimation() {
             _characterAnimator.SetTrigger(AttackAnimProperty);
+        }
+        
+        private void PlaySlowAttackAnimation() {
+            _characterAnimator.SetTrigger(SlowAttackAnimProperty);
+        }
+        
+        private void PlayRollAnimation() {
+            _characterAnimator.SetTrigger(RollAnimProperty);
         }
     }
 }

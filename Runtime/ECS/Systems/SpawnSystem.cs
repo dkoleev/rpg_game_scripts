@@ -68,8 +68,8 @@ namespace Darkness.Runtime.ECS.Systems {
                             Moving = false
                         });
                         ecb.SetComponent(playerEntity, new CombatData {
-                            AttackInProgress = false,
-                            AttackTime = 0f
+                            ActionInProgress = false,
+                            CurrentActionTime = 0f
                         });
                         ecb.SetComponent(playerEntity, new EntityViewData {
                             PrefabPath = spawnPoint.PrefabPath,

@@ -2,7 +2,10 @@
 
 namespace Darkness.Runtime.ECS.Components {
     public struct CombatData : IComponentData {
-        public bool AttackInProgress;
-        public float AttackTime;
+        public bool ActionInProgress;
+        public float CurrentActionTime;
+        public bool IsSlowAttack;
+        public bool IsAttack;
+        public bool IsRoll;
     }
 }

@@ -5,6 +5,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Interactions;
 using VContainer.Unity;
 using PlayerInput = Darkness.Runtime.Input.PlayerInput;
 
@@ -21,31 +22,73 @@ namespace Darkness.Runtime.Gameplay {
             _playerInput.Enable();
             _playerInput.Player.Move.performed += MovePreformed;
             _playerInput.Player.Move.canceled += MoveCanceled;
-            _playerInput.Player.Attack.started += AttackPerformed;
+            _playerInput.Player.Attack.started += AttackStarted;
+            _playerInput.Player.Attack.performed += AttackPerformed;
             _playerInput.Player.Attack.canceled += AttackCancelled;
+
+            _playerInput.Player.Roll.performed += RollPerformed;
             
             _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
             _playerInputQuery = _entityManager.CreateEntityQuery(typeof(InputData));
         }
+
+        public void Dispose() {
+            _playerInput.Player.Move.performed -= MovePreformed;
+            _playerInput.Player.Move.canceled -= MoveCanceled;
+            _playerInput.Player.Attack.started -= AttackStarted;
+            _playerInput.Player.Attack.performed -= AttackPerformed;
+            _playerInput.Player.Attack.canceled -= AttackCancelled;
+            
+            _playerInput.Player.Roll.performed -= RollPerformed;
+            
+            Disable();        
+        }
         
+        private void RollPerformed(InputAction.CallbackContext context) {
+            if (!_entityManager.Exists(_playerEntity)) {
+                return;
+            }
+
+            var inputData = _entityManager.GetComponentData<InputData>(_playerEntity);
+            inputData.Roll = true;
+            _entityManager.SetComponentData(_playerEntity, inputData);
+        }
+
+        private void Disable() {
+            _playerInput.Disable();
+        }
+        
+        private void Enable() {
+            _playerInput.Enable();
+        }
+
+        private void AttackStarted(InputAction.CallbackContext context) {
+            
+        }
+
         private void AttackPerformed(InputAction.CallbackContext context) {
             if (!_entityManager.Exists(_playerEntity)) {
                 return;
             }
 
             var inputData = _entityManager.GetComponentData<InputData>(_playerEntity);
-            inputData.Attack = true;
+            if (context.interaction is SlowTapInteraction) {
+                inputData.SlowAttack = true;
+            }
+            else {
+                inputData.Attack = true;
+            }
             _entityManager.SetComponentData(_playerEntity, inputData);
         }
         
         private void AttackCancelled(InputAction.CallbackContext context) {
-            if (!_entityManager.Exists(_playerEntity)) {
-                return;
-            }
-
-            var inputData = _entityManager.GetComponentData<InputData>(_playerEntity);
-            inputData.Attack = false;
-            _entityManager.SetComponentData(_playerEntity, inputData);
+            // if (!_entityManager.Exists(_playerEntity)) {
+            //     return;
+            // }
+            //
+            // var inputData = _entityManager.GetComponentData<InputData>(_playerEntity);
+            // inputData.Attack = false;
+            // _entityManager.SetComponentData(_playerEntity, inputData);
         }
 
 
@@ -69,14 +112,6 @@ namespace Darkness.Runtime.Gameplay {
             var inputData = _entityManager.GetComponentData<InputData>(_playerEntity);
             inputData.MoveValue = new float2(inputValue.x, inputValue.y);
             _entityManager.SetComponentData(_playerEntity, inputData);
-        }
-
-        public void Dispose() {
-            _playerInput.Player.Move.performed -= MovePreformed;
-            _playerInput.Player.Move.canceled -= MoveCanceled;
-            _playerInput.Player.Attack.performed -= AttackPerformed;
-            _playerInput.Player.Attack.canceled -= AttackCancelled;
-            _playerInput.Disable();        
         }
 
         public void Tick() {
