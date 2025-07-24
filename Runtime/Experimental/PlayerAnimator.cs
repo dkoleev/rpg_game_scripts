@@ -2,6 +2,13 @@
 
 namespace Darkness.Runtime.Experimental {
     public class PlayerAnimator : MonoBehaviour {
+        private static readonly int VelocityY = Animator.StringToHash("VelocityY");
+        private static readonly int VelocityX = Animator.StringToHash("VelocityX");
+        private static readonly int Land = Animator.StringToHash("Land");
+        private static readonly int Jump = Animator.StringToHash("Jump");
+        private static readonly int SlowAttack = Animator.StringToHash("SlowAttack");
+        private static readonly int Attack = Animator.StringToHash("Attack");
+        private static readonly int Dash = Animator.StringToHash("Dash");
         private PlayerPlatformerMovement mov;
         private Animator anim;
         private SpriteRenderer spriteRend;
@@ -18,6 +25,7 @@ namespace Darkness.Runtime.Experimental {
 
         public bool startedJumping { private get; set; }
         public bool justLanded { private get; set; }
+        public bool startDashing { private get; set; }
 
         public float currentVelY;
 
@@ -53,18 +61,33 @@ namespace Darkness.Runtime.Experimental {
 
         private void CheckAnimationState() {
             if (startedJumping) {
-                anim.SetTrigger("Jump");
+                anim.SetTrigger(Jump);
                 startedJumping = false;
+                return;
+            }
+            
+            if (startDashing) {
+                anim.SetTrigger(Dash);
+                startDashing = false;
                 return;
             }
 
             if (justLanded) {
-                anim.SetTrigger("Land");
+                anim.SetTrigger(Land);
                 justLanded = false;
                 return;
             }
 
-            anim.SetFloat("Vel Y", mov.RB.linearVelocity.y);
+            anim.SetFloat(VelocityY, mov.RB.linearVelocity.y);
+            anim.SetFloat(VelocityX, Mathf.Abs(mov.RB.linearVelocity.x));
+        }
+
+        public void PlayAttack() {
+            anim.SetTrigger(Attack);
+        }
+
+        public void PlaySlowAttack() {
+            anim.SetTrigger(SlowAttack);
         }
     }
 }

@@ -84,6 +84,7 @@ namespace Darkness.Runtime.Experimental {
 		private PlayerInput _playerInput;
 		private InputAction _moveAction;
 		private InputAction _jumpAction;
+		private InputAction _dashAction;
 		
 		private void Awake() {
 			RB = GetComponent<Rigidbody2D>();
@@ -91,6 +92,7 @@ namespace Darkness.Runtime.Experimental {
 			_playerInput = GetComponent<PlayerInput>();
 			_moveAction = _playerInput.actions["Move"];
 			_jumpAction = _playerInput.actions["Jump"];
+			_dashAction = _playerInput.actions["Roll"];
 		}
 
 		private void Start() {
@@ -125,10 +127,10 @@ namespace Darkness.Runtime.Experimental {
 			if (_jumpAction.WasPressedThisFrame()) {
 				OnJumpUpInput();
 			}
-
-			// if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.K)) {
-			// 	OnDashInput();
-			// }
+			
+			if (_dashAction.WasPressedThisFrame()) {
+				OnDashInput();
+			}
 
 			#endregion
 
@@ -230,6 +232,8 @@ namespace Darkness.Runtime.Experimental {
 				IsWallJumping = false;
 				_isJumpCut = false;
 
+				AnimHandler.startDashing = true;
+				
 				StartCoroutine(nameof(StartDash), _lastDashDir);
 			}
 
