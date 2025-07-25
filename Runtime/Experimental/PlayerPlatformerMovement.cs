@@ -92,7 +92,7 @@ namespace Darkness.Runtime.Experimental {
 			_playerInput = GetComponent<PlayerInput>();
 			_moveAction = _playerInput.actions["Move"];
 			_jumpAction = _playerInput.actions["Jump"];
-			_dashAction = _playerInput.actions["Roll"];
+			_dashAction = _playerInput.actions["Dash"];
 		}
 
 		private void Start() {
@@ -117,8 +117,11 @@ namespace Darkness.Runtime.Experimental {
 
 			_moveInput = _moveAction.ReadValue<Vector2>();
 
-			if (_moveInput.x != 0)
-				CheckDirectionToFace(_moveInput.x > 0);
+			if (_moveInput.x > 0) {
+				transform.rotation = Quaternion.Euler(0f, 0f, 0f);
+			}else if (_moveInput.x < 0) {
+				transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+			}
 
 			if (_jumpAction.WasPressedThisFrame()) {
 				OnJumpInput();
@@ -136,18 +139,20 @@ namespace Darkness.Runtime.Experimental {
 
 			#region COLLISION CHECKS
 
-			if (!IsDashing && !IsJumping) {
+			if (!IsJumping) {
 				//Ground Check
 				if (Physics2D.OverlapBox(_groundCheckPoint.position, _groundCheckSize, 0,
 					    _groundLayer)) //checks if set box overlaps with ground
 				{
 					if (LastOnGroundTime < -0.1f) {
-						AnimHandler.justLanded = true;
+						AnimHandler.JustLanded = true;
 					}
 
 					LastOnGroundTime = Data.coyoteTime; //if so sets the lastGrounded to coyoteTime
 				}
+			}
 
+			if (!IsDashing && !IsJumping) {
 				//Right Wall Check
 				if (((Physics2D.OverlapBox(_frontWallCheckPoint.position, _wallCheckSize, 0, _groundLayer) &&
 				      IsFacingRight)
@@ -195,7 +200,7 @@ namespace Darkness.Runtime.Experimental {
 					_isJumpFalling = false;
 					Jump();
 
-					AnimHandler.startedJumping = true;
+					AnimHandler.StartedJumping = true;
 				}
 				//WALL JUMP
 				else if (CanWallJump() && LastPressedJumpTime > 0) {
@@ -232,7 +237,7 @@ namespace Darkness.Runtime.Experimental {
 				IsWallJumping = false;
 				_isJumpCut = false;
 
-				AnimHandler.startDashing = true;
+				AnimHandler.StartDashing = true;
 				
 				StartCoroutine(nameof(StartDash), _lastDashDir);
 			}
@@ -414,15 +419,6 @@ namespace Darkness.Runtime.Experimental {
 			 */
 		}
 
-		private void Turn() {
-			//stores scale and flips the player along the x axis, 
-			Vector3 scale = transform.localScale;
-			scale.x *= -1;
-			transform.localScale = scale;
-
-			IsFacingRight = !IsFacingRight;
-		}
-
 		#endregion
 
 		#region JUMP METHODS
@@ -481,7 +477,7 @@ namespace Darkness.Runtime.Experimental {
 			//Overall this method of dashing aims to mimic Celeste, if you're looking for
 			// a more physics-based approach try a method similar to that used in the jump
 
-			LastOnGroundTime = 0;
+			//LastOnGroundTime = 0;
 			LastPressedDashTime = 0;
 
 			float startTime = Time.time;
@@ -489,7 +485,7 @@ namespace Darkness.Runtime.Experimental {
 			_dashesLeft--;
 			_isDashAttacking = true;
 
-			SetGravityScale(0);
+			//SetGravityScale(0);
 
 			//We keep the player's velocity at the dash speed during the "attack" phase (in celeste the first 0.15s)
 			while (Time.time - startTime <= Data.dashAttackTime) {
@@ -504,7 +500,7 @@ namespace Darkness.Runtime.Experimental {
 			_isDashAttacking = false;
 
 			//Begins the "end" of our dash where we return some control to the player but still limit run acceleration (see Update() and Run())
-			SetGravityScale(Data.gravityScale);
+			//SetGravityScale(Data.gravityScale);
 			RB.linearVelocity = Data.dashEndSpeed * dir.normalized;
 
 			while (Time.time - startTime <= Data.dashEndTime) {
@@ -550,11 +546,6 @@ namespace Darkness.Runtime.Experimental {
 
 
 		#region CHECK METHODS
-
-		public void CheckDirectionToFace(bool isMovingRight) {
-			if (isMovingRight != IsFacingRight)
-				Turn();
-		}
 
 		private bool CanJump() {
 			return LastOnGroundTime > 0 && !IsJumping;

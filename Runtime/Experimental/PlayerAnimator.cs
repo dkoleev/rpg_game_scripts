@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using VContainer;
 
 namespace Darkness.Runtime.Experimental {
     public class PlayerAnimator : MonoBehaviour {
@@ -9,85 +10,68 @@ namespace Darkness.Runtime.Experimental {
         private static readonly int SlowAttack = Animator.StringToHash("SlowAttack");
         private static readonly int Attack = Animator.StringToHash("Attack");
         private static readonly int Dash = Animator.StringToHash("Dash");
-        private PlayerPlatformerMovement mov;
-        private Animator anim;
-        private SpriteRenderer spriteRend;
+        private static readonly int Block = Animator.StringToHash("Blocking");
 
-        [Header("Movement Tilt")] [SerializeField]
-        private float maxTilt;
+        public bool StartedJumping { private get; set; }
+        public bool JustLanded { private get; set; }
+        public bool StartDashing { private get; set; }
 
-        [SerializeField] [Range(0, 1)] private float tiltSpeed;
+        private PlayerPlatformerMovement _mov;
+        private Animator _anim;
+        private SpriteRenderer _spriteRend;
+        private PlayerPlatformerAttack _attack;
 
-        [Header("Particle FX")] [SerializeField]
-        private GameObject jumpFX;
-
-        [SerializeField] private GameObject landFX;
-
-        public bool startedJumping { private get; set; }
-        public bool justLanded { private get; set; }
-        public bool startDashing { private get; set; }
-
-        public float currentVelY;
+        [Inject]
+        public void Construct(PlayerPlatformerAttack attack) {
+            _attack = attack;
+            _attack.OnPerformAttack += PlayAttack;
+            _attack.OnPerformSlowAttack += PlaySlowAttack;
+            _attack.OnBlocking += SetBlock;
+        }
 
         private void Start() {
-            mov = GetComponent<PlayerPlatformerMovement>();
-            spriteRend = GetComponentInChildren<SpriteRenderer>();
-            anim = spriteRend.GetComponent<Animator>();
+            _mov = GetComponent<PlayerPlatformerMovement>();
+            _spriteRend = GetComponentInChildren<SpriteRenderer>();
+            _anim = _spriteRend.GetComponent<Animator>();
         }
 
         private void LateUpdate() {
-            #region Tilt
-
-            float tiltProgress;
-
-            int mult = -1;
-
-            if (mov.IsSliding) {
-                tiltProgress = 0.25f;
-            }
-            else {
-                tiltProgress = Mathf.InverseLerp(-mov.Data.runMaxSpeed, mov.Data.runMaxSpeed, mov.RB.linearVelocity.x);
-                mult = (mov.IsFacingRight) ? 1 : -1;
-            }
-
-            float newRot = ((tiltProgress * maxTilt * 2) - maxTilt);
-            float rot = Mathf.LerpAngle(spriteRend.transform.localRotation.eulerAngles.z * mult, newRot, tiltSpeed);
-            spriteRend.transform.localRotation = Quaternion.Euler(0, 0, rot * mult);
-
-            #endregion
-
             CheckAnimationState();
         }
 
         private void CheckAnimationState() {
-            if (startedJumping) {
-                anim.SetTrigger(Jump);
-                startedJumping = false;
+            if (StartedJumping) {
+                _anim.SetTrigger(Jump);
+                StartedJumping = false;
                 return;
             }
             
-            if (startDashing) {
-                anim.SetTrigger(Dash);
-                startDashing = false;
+            if (StartDashing) {
+                _anim.SetTrigger(Dash);
+                StartDashing = false;
                 return;
             }
 
-            if (justLanded) {
-                anim.SetTrigger(Land);
-                justLanded = false;
+            if (JustLanded) {
+                _anim.SetTrigger(Land);
+                JustLanded = false;
                 return;
             }
 
-            anim.SetFloat(VelocityY, mov.RB.linearVelocity.y);
-            anim.SetFloat(VelocityX, Mathf.Abs(mov.RB.linearVelocity.x));
+            _anim.SetFloat(VelocityY, _mov.RB.linearVelocity.y);
+            _anim.SetFloat(VelocityX, Mathf.Abs(_mov.RB.linearVelocity.x));
         }
 
-        public void PlayAttack() {
-            anim.SetTrigger(Attack);
+        private void PlayAttack() {
+            _anim.SetTrigger(Attack);
         }
 
-        public void PlaySlowAttack() {
-            anim.SetTrigger(SlowAttack);
+        private void PlaySlowAttack() {
+            _anim.SetTrigger(SlowAttack);
+        }
+
+        private void SetBlock(bool isBlocking) {
+            _anim.CrossFadeInFixedTime(isBlocking ? "ToBlock" : "Idle", 0f);
         }
     }
 }

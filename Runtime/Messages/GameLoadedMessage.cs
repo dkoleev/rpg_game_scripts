@@ -1,3 +1,3 @@
 ﻿namespace Darkness.Runtime.Messages {
-    public class GameLoadedMessage { }
+    public struct GameLoadedMessage { }
 }

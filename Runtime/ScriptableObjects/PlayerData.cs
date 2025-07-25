@@ -81,7 +81,7 @@ namespace Darkness.Runtime.ScriptableObjects {
 			jumpInputBufferTime; //Grace period after pressing jump where a jump will be automatically performed once the requirements (eg. being grounded) are met.
 
 		[Space(20)] [Header("Dash")] public int dashAmount;
-		public float dashSpeed;
+		public Vector2 dashSpeed;
 
 		public float
 			dashSleepTime; //Duration for which the game freezes when we press dash but before we read directional input and apply a force

@@ -5,6 +5,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 
 namespace Darkness.Runtime.ECS.Systems {
+    [DisableAutoCreation]
     [BurstCompile]
     public partial struct FindClosestNPCSystem : ISystem {
         public void OnUpdate(ref SystemState state) {

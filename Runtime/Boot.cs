@@ -40,7 +40,7 @@ namespace Darkness.Runtime {
             LoadPlayerState();
             
             await LoadScenes();
-            SpawnCharacters();            
+            // SpawnCharacters();            
         }
         
         private void LoadGameData() { }
@@ -55,7 +55,7 @@ namespace Darkness.Runtime {
             SceneManager.SetActiveScene(SceneManager.GetSceneByName("Introduction"));
         }
 
-        private void SpawnCharacters() {
+        /*private void SpawnCharacters() {
             var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
             
             var spawnPoints = GameObject.FindGameObjectsWithTag("SpawnPoint");
@@ -82,7 +82,7 @@ namespace Darkness.Runtime {
                     }
                 }
             }
-        }
+        }*/
 
         private void InitializeCamera(Transform targetTransform) {
             var brain = Camera.main.GetComponent<CinemachineBrain>();

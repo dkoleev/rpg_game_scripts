@@ -6,9 +6,11 @@ using Darkness.Runtime.Log;
 using Darkness.Runtime.Presentation;
 using Unity.Entities;
 using Unity.Mathematics;
+using UnityEngine;
 using VContainer;
 
 namespace Darkness.Runtime.ECS.Systems {
+    [DisableAutoCreation]
     public partial class EntityViewSyncSystem : SystemBase {
         private Entity _registryEntity;
         private EntityViewManager _entityViewManager;

@@ -3,8 +3,10 @@ using Darkness.Runtime.ECS.Components.Tags;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using UnityEngine;
 
 namespace Darkness.Runtime.ECS.Systems {
+    [DisableAutoCreation]
     [BurstCompile]
     public partial struct DialogueTriggerSystem : ISystem {
         private EntityQuery _dialogueTriggerQuery;
@@ -13,6 +15,7 @@ namespace Darkness.Runtime.ECS.Systems {
         }
 
         public void OnUpdate(ref SystemState state) {
+            Debug.LogError("DialogueTriggerSystem");
             if (!_dialogueTriggerQuery.IsEmptyIgnoreFilter) {
                 return;
             }

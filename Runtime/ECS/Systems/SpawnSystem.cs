@@ -4,6 +4,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 
 namespace Darkness.Runtime.ECS.Systems {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class SpawnSystem : SystemBase {
         private EntityArchetype _npcArchetype;

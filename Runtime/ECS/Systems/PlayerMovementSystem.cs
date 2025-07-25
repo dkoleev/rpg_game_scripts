@@ -4,6 +4,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 
 namespace Darkness.Runtime.ECS.Systems {
+    [DisableAutoCreation]
     [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     public partial struct PlayerMovementSystem : ISystem {
