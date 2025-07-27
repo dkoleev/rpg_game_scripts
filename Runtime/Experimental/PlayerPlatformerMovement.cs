@@ -551,7 +551,6 @@ namespace Darkness.Runtime.Experimental {
 		}
 
 		private bool CanSlide() {
-			return true;
 			return !IsSliding && !IsJumping && !IsWallJumping && !IsDashing && LastOnGroundTime > 0;
 		}
 
