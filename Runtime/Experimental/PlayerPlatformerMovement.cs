@@ -10,16 +10,11 @@ namespace Darkness.Runtime.Experimental {
 		//just paste in all the parameters, though you will need to manuly change all references in this script
 		public PlayerData Data;
 
-		#region COMPONENTS
-
 		public Rigidbody2D RB { get; private set; }
 
 		//Script to handle all player animations, all references can be safely removed if you're importing into your own project.
 		public PlayerAnimator AnimHandler { get; private set; }
 
-		#endregion
-
-		#region STATE PARAMETERS
 
 		//Variables control the various actions the player can perform at any time.
 		//These are fields which can are public allowing for other sctipts to read them
@@ -29,6 +24,7 @@ namespace Darkness.Runtime.Experimental {
 		public bool IsWallJumping { get; private set; }
 		public bool IsDashing { get; private set; }
 		public bool IsSliding { get; private set; }
+		public bool IsSitting { get; private set; }
 
 		//Timers (also all fields, could be private and a method returning a bool could be used)
 		public float LastOnGroundTime { get; private set; }
@@ -49,19 +45,16 @@ namespace Darkness.Runtime.Experimental {
 		private bool _dashRefilling;
 		private Vector2 _lastDashDir;
 		private bool _isDashAttacking;
-
-		#endregion
-
-		#region INPUT PARAMETERS
+		
+		//Slide
+		private Vector2 _lastSlideDir;
+		private bool _isSlideAttacking;
 
 		private Vector2 _moveInput;
 
 		public float LastPressedJumpTime { get; private set; }
 		public float LastPressedDashTime { get; private set; }
-
-		#endregion
-
-		#region CHECK PARAMETERS
+		public float LastPressedSlideTime { get; private set; }
 
 		//Set all of these up in the inspector
 		[Header("Checks")] [SerializeField] private Transform _groundCheckPoint;
@@ -72,19 +65,14 @@ namespace Darkness.Runtime.Experimental {
 		[SerializeField] private Transform _backWallCheckPoint;
 		[SerializeField] private Vector2 _wallCheckSize = new Vector2(0.5f, 1f);
 
-		#endregion
-
-		#region LAYERS & TAGS
-
 		[Header("Layers & Tags")] [SerializeField]
 		private LayerMask _groundLayer;
-
-		#endregion
 
 		private PlayerInput _playerInput;
 		private InputAction _moveAction;
 		private InputAction _jumpAction;
 		private InputAction _dashAction;
+		private InputAction _slideAction;
 		
 		private void Awake() {
 			RB = GetComponent<Rigidbody2D>();
@@ -93,6 +81,7 @@ namespace Darkness.Runtime.Experimental {
 			_moveAction = _playerInput.actions["Move"];
 			_jumpAction = _playerInput.actions["Jump"];
 			_dashAction = _playerInput.actions["Dash"];
+			_slideAction = _playerInput.actions["Slide"];
 		}
 
 		private void Start() {
@@ -101,8 +90,6 @@ namespace Darkness.Runtime.Experimental {
 		}
 
 		private void Update() {
-			#region TIMERS
-
 			LastOnGroundTime -= Time.deltaTime;
 			LastOnWallTime -= Time.deltaTime;
 			LastOnWallRightTime -= Time.deltaTime;
@@ -110,34 +97,34 @@ namespace Darkness.Runtime.Experimental {
 
 			LastPressedJumpTime -= Time.deltaTime;
 			LastPressedDashTime -= Time.deltaTime;
-
-			#endregion
-
-			#region INPUT HANDLER
+			LastPressedSlideTime -= Time.deltaTime;
 
 			_moveInput = _moveAction.ReadValue<Vector2>();
-
-			if (_moveInput.x > 0) {
+			if (_moveInput.x > 0.01f && !IsFacingRight) {
+				IsFacingRight = true;
 				transform.rotation = Quaternion.Euler(0f, 0f, 0f);
-			}else if (_moveInput.x < 0) {
+			}else if (_moveInput.x < -0.01f && IsFacingRight) {
+				IsFacingRight = false;
 				transform.rotation = Quaternion.Euler(0f, 180f, 0f);
 			}
 
+			IsSitting = _moveInput.y < -0.9f && CanSit();
+			
 			if (_jumpAction.WasPressedThisFrame()) {
 				OnJumpInput();
 			}
 
-			if (_jumpAction.WasPressedThisFrame()) {
-				OnJumpUpInput();
-			}
+			// if (_jumpAction.WasPressedThisFrame()) {
+			// 	OnJumpUpInput();
+			// }
 			
 			if (_dashAction.WasPressedThisFrame()) {
 				OnDashInput();
 			}
-
-			#endregion
-
-			#region COLLISION CHECKS
+			
+			if (_slideAction.WasPressedThisFrame()) {
+				OnSlideInput();
+			}
 
 			if (!IsJumping) {
 				//Ground Check
@@ -152,7 +139,7 @@ namespace Darkness.Runtime.Experimental {
 				}
 			}
 
-			if (!IsDashing && !IsJumping) {
+			if (!IsDashing && !IsJumping && !IsSliding) {
 				//Right Wall Check
 				if (((Physics2D.OverlapBox(_frontWallCheckPoint.position, _wallCheckSize, 0, _groundLayer) &&
 				      IsFacingRight)
@@ -171,10 +158,6 @@ namespace Darkness.Runtime.Experimental {
 				LastOnWallTime = Mathf.Max(LastOnWallLeftTime, LastOnWallRightTime);
 			}
 
-			#endregion
-
-			#region JUMP CHECKS
-
 			if (IsJumping && RB.linearVelocity.y < 0) {
 				IsJumping = false;
 
@@ -191,7 +174,7 @@ namespace Darkness.Runtime.Experimental {
 				_isJumpFalling = false;
 			}
 
-			if (!IsDashing) {
+			if (!IsDashing && !IsSliding) {
 				//Jump
 				if (CanJump() && LastPressedJumpTime > 0) {
 					IsJumping = true;
@@ -205,6 +188,7 @@ namespace Darkness.Runtime.Experimental {
 				//WALL JUMP
 				else if (CanWallJump() && LastPressedJumpTime > 0) {
 					IsWallJumping = true;
+					
 					IsJumping = false;
 					_isJumpCut = false;
 					_isJumpFalling = false;
@@ -216,8 +200,6 @@ namespace Darkness.Runtime.Experimental {
 				}
 			}
 
-			#endregion
-
 			#region DASH CHECKS
 
 			if (CanDash() && LastPressedDashTime > 0) {
@@ -225,15 +207,17 @@ namespace Darkness.Runtime.Experimental {
 				Sleep(Data.dashSleepTime);
 
 				//If not direction pressed, dash forward
-				if (_moveInput != Vector2.zero)
+				if (_moveInput != Vector2.zero) {
 					_lastDashDir = _moveInput;
-				else
+				}
+				else {
 					_lastDashDir = IsFacingRight ? Vector2.right : Vector2.left;
-
-
+				}
 
 				IsDashing = true;
+				
 				IsJumping = false;
+				// IsSliding = false;
 				IsWallJumping = false;
 				_isJumpCut = false;
 
@@ -242,26 +226,33 @@ namespace Darkness.Runtime.Experimental {
 				StartCoroutine(nameof(StartDash), _lastDashDir);
 			}
 
-			#endregion
+			if (CanSlide() && LastPressedSlideTime > 0) {
+					//If not direction pressed, slide forward
+				if (_moveInput != Vector2.zero) {
+					_lastSlideDir = _moveInput;
+				}
+				else {
+					_lastSlideDir = IsFacingRight ? Vector2.right : Vector2.left;
+				}
 
-			#region SLIDE CHECKS
-
-			if (CanSlide() && ((LastOnWallLeftTime > 0 && _moveInput.x < 0) ||
-			                   (LastOnWallRightTime > 0 && _moveInput.x > 0)))
 				IsSliding = true;
-			else
-				IsSliding = false;
+				
+				IsDashing = false;
+				IsJumping = false;
+				IsWallJumping = false;
+				_isJumpCut = false;
+
+				AnimHandler.StartSliding = true;
+				StartCoroutine(nameof(StartSlide), _lastSlideDir);
+			}
 
 			#endregion
 
 			#region GRAVITY
 
-			if (!_isDashAttacking) {
+			if (!_isDashAttacking && !_isSlideAttacking) {
 				//Higher gravity if we've released the jump input or are falling
-				if (IsSliding) {
-					SetGravityScale(0);
-				}
-				else if (RB.linearVelocity.y < 0 && _moveInput.y < 0) {
+				if (RB.linearVelocity.y < 0 && _moveInput.y < 0) {
 					//Much higher gravity if holding down
 					SetGravityScale(Data.gravityScale * Data.fastFallGravityMult);
 					//Caps maximum fall speed, so when falling over large distances we don't accelerate to insanely high speeds
@@ -291,7 +282,7 @@ namespace Darkness.Runtime.Experimental {
 				}
 			}
 			else {
-				//No gravity when dashing (returns to normal once initial dashAttack phase over)
+				//No gravity when dashing or sliding (returns to normal once initial dashAttack phase over)
 				SetGravityScale(0);
 			}
 
@@ -300,7 +291,7 @@ namespace Darkness.Runtime.Experimental {
 
 		private void FixedUpdate() {
 			//Handle Run
-			if (!IsDashing) {
+			if (!IsDashing && !IsSliding) {
 				if (IsWallJumping)
 					Run(Data.wallJumpRunLerp);
 				else
@@ -309,33 +300,30 @@ namespace Darkness.Runtime.Experimental {
 			else if (_isDashAttacking) {
 				Run(Data.dashEndRunLerp);
 			}
-
-			//Handle Slide
-			if (IsSliding)
-				Slide();
+			else if (_isSlideAttacking) {
+				Run(Data.slideEndRunLerp);
+			}
 		}
 
-		#region INPUT CALLBACKS
-
 		//Methods which whandle input detected in Update()
-		public void OnJumpInput() {
+		private void OnJumpInput() {
 			LastPressedJumpTime = Data.jumpInputBufferTime;
 		}
 
-		public void OnJumpUpInput() {
+		private void OnJumpUpInput() {
 			if (CanJumpCut() || CanWallJumpCut())
 				_isJumpCut = true;
 		}
 
-		public void OnDashInput() {
+		private void OnDashInput() {
 			LastPressedDashTime = Data.dashInputBufferTime;
 		}
 
-		#endregion
+		private void OnSlideInput() {
+			LastPressedSlideTime = Data.slideInputBufferTime;
+		}
 
-		#region GENERAL METHODS
-
-		public void SetGravityScale(float scale) {
+		private void SetGravityScale(float scale) {
 			RB.gravityScale = scale;
 		}
 
@@ -352,17 +340,14 @@ namespace Darkness.Runtime.Experimental {
 			Time.timeScale = 1;
 		}
 
-		#endregion
 
 		//MOVEMENT METHODS
-
-		#region RUN METHODS
 
 		private void Run(float lerpAmount) {
 			//Calculate the direction we want to move in and our desired velocity
 			float targetSpeed = _moveInput.x * Data.runMaxSpeed;
 			//We can reduce are control using Lerp() this smooths changes to are direction and speed
-			targetSpeed = Mathf.Lerp(RB.linearVelocity.x, targetSpeed, lerpAmount);
+			targetSpeed = Mathf.Lerp(RB.linearVelocityX, targetSpeed, lerpAmount);
 
 			#region Calculate AccelRate
 
@@ -393,8 +378,9 @@ namespace Darkness.Runtime.Experimental {
 			#region Conserve Momentum
 
 			//We won't slow the player down if they are moving in their desired direction but at a greater speed than their maxSpeed
-			if (Data.doConserveMomentum && Mathf.Abs(RB.linearVelocity.x) > Mathf.Abs(targetSpeed) &&
-			    Mathf.Sign(RB.linearVelocity.x) == Mathf.Sign(targetSpeed) && Mathf.Abs(targetSpeed) > 0.01f &&
+			if (Data.doConserveMomentum && Mathf.Abs(RB.linearVelocityX) > Mathf.Abs(targetSpeed) &&
+			    Mathf.Approximately(Mathf.Sign(RB.linearVelocityX), Mathf.Sign(targetSpeed)) && 
+			    Mathf.Abs(targetSpeed) > 0.01f &&
 			    LastOnGroundTime < 0) {
 				//Prevent any deceleration from happening, or in other words conserve are current momentum
 				//You could experiment with allowing for the player to slightly increae their speed whilst in this "state"
@@ -404,14 +390,13 @@ namespace Darkness.Runtime.Experimental {
 			#endregion
 
 			//Calculate difference between current velocity and desired velocity
-			float speedDif = targetSpeed - RB.linearVelocity.x;
+			var speedDif = targetSpeed - RB.linearVelocityX;
+
 			//Calculate force along x-axis to apply to thr player
-
 			float movement = speedDif * accelRate;
-
+			
 			//Convert this to a vector and apply to rigidbody
 			RB.AddForce(movement * Vector2.right, ForceMode2D.Force);
-
 			/*
 			 * For those interested here is what AddForce() will do
 			 * RB.velocity = new Vector2(RB.velocity.x + (Time.fixedDeltaTime  * speedDif * accelRate) / RB.mass, RB.velocity.y);
@@ -419,16 +404,10 @@ namespace Darkness.Runtime.Experimental {
 			 */
 		}
 
-		#endregion
-
-		#region JUMP METHODS
-
 		private void Jump() {
 			//Ensures we can't call Jump multiple times from one press
 			LastPressedJumpTime = 0;
 			LastOnGroundTime = 0;
-
-			#region Perform Jump
 
 			//We increase the force applied if we are falling
 			//This means we'll always feel like we jump the same amount 
@@ -438,8 +417,6 @@ namespace Darkness.Runtime.Experimental {
 				force -= RB.linearVelocity.y;
 
 			RB.AddForce(Vector2.up * force, ForceMode2D.Impulse);
-
-			#endregion
 		}
 
 		private void WallJump(int dir) {
@@ -454,7 +431,7 @@ namespace Darkness.Runtime.Experimental {
 			Vector2 force = new Vector2(Data.wallJumpForce.x, Data.wallJumpForce.y);
 			force.x *= dir; //apply force in opposite direction of wall
 
-			if (Mathf.Sign(RB.linearVelocity.x) != Mathf.Sign(force.x))
+			if (!Mathf.Approximately(Mathf.Sign(RB.linearVelocity.x), Mathf.Sign(force.x)))
 				force.x -= RB.linearVelocity.x;
 
 			if (RB.linearVelocity.y <
@@ -467,10 +444,6 @@ namespace Darkness.Runtime.Experimental {
 
 			#endregion
 		}
-
-		#endregion
-
-		#region DASH METHODS
 
 		//Dash Coroutine
 		private IEnumerator StartDash(Vector2 dir) {
@@ -520,32 +493,36 @@ namespace Darkness.Runtime.Experimental {
 			_dashesLeft = Mathf.Min(Data.dashAmount, _dashesLeft + 1);
 		}
 
-		#endregion
-
-		#region OTHER MOVEMENT METHODS
-
-		private void Slide() {
-			//We remove the remaining upwards Impulse to prevent upwards sliding
-			if (RB.linearVelocity.y > 0) {
-				RB.AddForce(-RB.linearVelocity.y * Vector2.up, ForceMode2D.Impulse);
+		private IEnumerator StartSlide(Vector2 dir) {
+			LastPressedSlideTime = 0;
+			float startTime = Time.time;
+			_isSlideAttacking = true;
+			//We keep the player's velocity at the dash speed during the "attack" phase (in celeste the first 0.15s)
+			while (Time.time - startTime <= Data.slideTime) {
+				RB.linearVelocity = dir.normalized * Data.slideSpeed;
+				//Pauses the loop until the next frame, creating something of a Update loop. 
+				//This is a cleaner implementation opposed to multiple timers and this coroutine approach is actually what is used in Celeste :D
+				yield return null;
 			}
 
-			//Works the same as the Run but only in the y-axis
-			//THis seems to work fine, buit maybe you'll find a better way to implement a slide into this system
-			float speedDif = Data.slideSpeed - RB.linearVelocity.y;
-			float movement = speedDif * Data.slideAccel;
-			//So, we clamp the movement here to prevent any over corrections (these aren't noticeable in the Run)
-			//The force applied can't be greater than the (negative) speedDifference * by how many times a second FixedUpdate() is called. For more info research how force are applied to rigidbodies.
-			movement = Mathf.Clamp(movement, -Mathf.Abs(speedDif) * (1 / Time.fixedDeltaTime),
-				Mathf.Abs(speedDif) * (1 / Time.fixedDeltaTime));
+			startTime = Time.time;
+			_isSlideAttacking = false;
 
-			RB.AddForce(movement * Vector2.up);
+			//Begins the "end" of our dash where we return some control to the player but still limit run acceleration (see Update() and Run())
+			//SetGravityScale(Data.gravityScale);
+			RB.linearVelocity = Data.slideEndSpeed * dir.normalized;
+
+			while (Time.time - startTime <= Data.slideEndTime) {
+				yield return null;
+			}
+
+			//Slide over
+			IsSliding = false;
 		}
 
-		#endregion
-
-
-		#region CHECK METHODS
+		private bool CanSit() {
+			return  !IsJumping && !IsWallJumping && !IsDashing && !IsSliding && LastOnGroundTime > 0;
+		}
 
 		private bool CanJump() {
 			return LastOnGroundTime > 0 && !IsJumping;
@@ -566,24 +543,17 @@ namespace Darkness.Runtime.Experimental {
 		}
 
 		private bool CanDash() {
-			if (!IsDashing && _dashesLeft < Data.dashAmount && LastOnGroundTime > 0 && !_dashRefilling) {
+			if (!IsDashing && !IsSliding && _dashesLeft < Data.dashAmount && LastOnGroundTime > 0 && !_dashRefilling) {
 				StartCoroutine(nameof(RefillDash), 1);
 			}
 
 			return _dashesLeft > 0;
 		}
 
-		public bool CanSlide() {
-			if (LastOnWallTime > 0 && !IsJumping && !IsWallJumping && !IsDashing && LastOnGroundTime <= 0)
-				return true;
-			else
-				return false;
+		private bool CanSlide() {
+			return true;
+			return !IsSliding && !IsJumping && !IsWallJumping && !IsDashing && LastOnGroundTime > 0;
 		}
-
-		#endregion
-
-
-		#region EDITOR METHODS
 
 		private void OnDrawGizmosSelected() {
 			Gizmos.color = Color.green;
@@ -592,7 +562,5 @@ namespace Darkness.Runtime.Experimental {
 			Gizmos.DrawWireCube(_frontWallCheckPoint.position, _wallCheckSize);
 			Gizmos.DrawWireCube(_backWallCheckPoint.position, _wallCheckSize);
 		}
-
-		#endregion
 	}
 }

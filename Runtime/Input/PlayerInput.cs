@@ -200,6 +200,15 @@ namespace Darkness.Runtime.Input
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Slide"",
+                    ""type"": ""Button"",
+                    ""id"": ""d021738e-daf1-4928-aec7-71923b48ad29"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -613,7 +622,7 @@ namespace Darkness.Runtime.Input
                 {
                     ""name"": """",
                     ""id"": ""6071da57-2e01-4ea4-bb09-4e2508345225"",
-                    ""path"": ""<Gamepad>/buttonEast"",
+                    ""path"": ""<Gamepad>/rightShoulder"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Gamepad"",
@@ -651,6 +660,28 @@ namespace Darkness.Runtime.Input
                     ""processors"": """",
                     ""groups"": "";Keyboard&Mouse"",
                     ""action"": ""Block"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""1a8a4782-4be8-4df0-b880-42caa053dfb2"",
+                    ""path"": ""<Gamepad>/buttonEast"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Slide"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""bbd6975d-09f0-41cb-b323-908e401064ee"",
+                    ""path"": ""<Keyboard>/c"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Slide"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1250,6 +1281,7 @@ namespace Darkness.Runtime.Input
             m_Player_Roll = m_Player.FindAction("Roll", throwIfNotFound: true);
             m_Player_Dash = m_Player.FindAction("Dash", throwIfNotFound: true);
             m_Player_Block = m_Player.FindAction("Block", throwIfNotFound: true);
+            m_Player_Slide = m_Player.FindAction("Slide", throwIfNotFound: true);
             // UI
             m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
             m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1355,6 +1387,7 @@ namespace Darkness.Runtime.Input
         private readonly InputAction m_Player_Roll;
         private readonly InputAction m_Player_Dash;
         private readonly InputAction m_Player_Block;
+        private readonly InputAction m_Player_Slide;
         /// <summary>
         /// Provides access to input actions defined in input action map "Player".
         /// </summary>
@@ -1414,6 +1447,10 @@ namespace Darkness.Runtime.Input
             /// Provides access to the underlying input action "Player/Block".
             /// </summary>
             public InputAction @Block => m_Wrapper.m_Player_Block;
+            /// <summary>
+            /// Provides access to the underlying input action "Player/Slide".
+            /// </summary>
+            public InputAction @Slide => m_Wrapper.m_Player_Slide;
             /// <summary>
             /// Provides access to the underlying input action map instance.
             /// </summary>
@@ -1476,6 +1513,9 @@ namespace Darkness.Runtime.Input
                 @Block.started += instance.OnBlock;
                 @Block.performed += instance.OnBlock;
                 @Block.canceled += instance.OnBlock;
+                @Slide.started += instance.OnSlide;
+                @Slide.performed += instance.OnSlide;
+                @Slide.canceled += instance.OnSlide;
             }
 
             /// <summary>
@@ -1523,6 +1563,9 @@ namespace Darkness.Runtime.Input
                 @Block.started -= instance.OnBlock;
                 @Block.performed -= instance.OnBlock;
                 @Block.canceled -= instance.OnBlock;
+                @Slide.started -= instance.OnSlide;
+                @Slide.performed -= instance.OnSlide;
+                @Slide.canceled -= instance.OnSlide;
             }
 
             /// <summary>
@@ -1907,6 +1950,13 @@ namespace Darkness.Runtime.Input
             /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
             /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
             void OnBlock(InputAction.CallbackContext context);
+            /// <summary>
+            /// Method invoked when associated input action "Slide" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+            /// </summary>
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+            void OnSlide(InputAction.CallbackContext context);
         }
         /// <summary>
         /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.

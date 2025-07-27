@@ -10,16 +10,17 @@ namespace Darkness.Runtime.Experimental {
         private static readonly int SlowAttack = Animator.StringToHash("SlowAttack");
         private static readonly int Attack = Animator.StringToHash("Attack");
         private static readonly int Dash = Animator.StringToHash("Dash");
-        private static readonly int Block = Animator.StringToHash("Blocking");
+        private static readonly int Slide = Animator.StringToHash("Slide");
 
         public bool StartedJumping { private get; set; }
         public bool JustLanded { private get; set; }
         public bool StartDashing { private get; set; }
+        public bool StartSliding { private get; set; }
 
         private PlayerPlatformerMovement _mov;
         private Animator _anim;
-        private SpriteRenderer _spriteRend;
         private PlayerPlatformerAttack _attack;
+        private bool _isSitting;
 
         [Inject]
         public void Construct(PlayerPlatformerAttack attack) {
@@ -31,8 +32,7 @@ namespace Darkness.Runtime.Experimental {
 
         private void Start() {
             _mov = GetComponent<PlayerPlatformerMovement>();
-            _spriteRend = GetComponentInChildren<SpriteRenderer>();
-            _anim = _spriteRend.GetComponent<Animator>();
+            _anim = transform.GetComponentInChildren<Animator>();
         }
 
         private void LateUpdate() {
@@ -51,12 +51,20 @@ namespace Darkness.Runtime.Experimental {
                 StartDashing = false;
                 return;
             }
+            
+            if (StartSliding) {
+                _anim.SetTrigger(Slide);
+                StartSliding = false;
+                return;
+            }
 
             if (JustLanded) {
                 _anim.SetTrigger(Land);
                 JustLanded = false;
                 return;
             }
+            
+            SetSitting(_mov.IsSitting);
 
             _anim.SetFloat(VelocityY, _mov.RB.linearVelocity.y);
             _anim.SetFloat(VelocityX, Mathf.Abs(_mov.RB.linearVelocity.x));
@@ -72,6 +80,14 @@ namespace Darkness.Runtime.Experimental {
 
         private void SetBlock(bool isBlocking) {
             _anim.CrossFadeInFixedTime(isBlocking ? "ToBlock" : "Idle", 0f);
+        }
+        
+        private void SetSitting(bool isSitting) {
+            if (_isSitting == isSitting) {
+                return;
+            }
+            _isSitting = isSitting;
+            _anim.CrossFadeInFixedTime(isSitting ? "ToSit" : "FromSit", 0f);
         }
     }
 }
