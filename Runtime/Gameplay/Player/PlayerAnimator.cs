@@ -2,7 +2,7 @@
 using UnityEngine;
 using VContainer;
 
-namespace Darkness.Runtime.Experimental {
+namespace Darkness.Runtime.Gameplay.Player {
     public class PlayerAnimator : MonoBehaviour {
         private static readonly int VelocityY = Animator.StringToHash("VelocityY");
         private static readonly int VelocityX = Animator.StringToHash("VelocityX");

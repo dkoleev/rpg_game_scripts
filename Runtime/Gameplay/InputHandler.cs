@@ -1,9 +1,7 @@
 ﻿using System;
-using Darkness.Runtime.ECS.Components;
+using Darkness.Runtime.Messages;
 using JetBrains.Annotations;
-using Unity.Entities;
-using Unity.Mathematics;
-using UnityEngine;
+using MessagePipe;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Interactions;
 using VContainer.Unity;
@@ -11,25 +9,29 @@ using PlayerInput = Darkness.Runtime.Input.PlayerInput;
 
 namespace Darkness.Runtime.Gameplay {
     [UsedImplicitly]
-    public class InputHandler : IStartable, IDisposable, ITickable {
-        private EntityManager _entityManager;
+    public class InputHandler : IStartable, IDisposable {
+        private readonly IPublisher<PerformInputMessage> _inputPublisher;
         private PlayerInput _playerInput;
-        private Entity _playerEntity;
-        private EntityQuery _playerInputQuery;
+
+        public InputHandler(IPublisher<PerformInputMessage> inputPublisher) {
+            _inputPublisher = inputPublisher;
+        }
 
         void IStartable.Start() {
             _playerInput = new PlayerInput();
             _playerInput.Enable();
             _playerInput.Player.Move.performed += MovePreformed;
             _playerInput.Player.Move.canceled += MoveCanceled;
+            
             _playerInput.Player.Attack.started += AttackStarted;
             _playerInput.Player.Attack.performed += AttackPerformed;
             _playerInput.Player.Attack.canceled += AttackCancelled;
+            
+            _playerInput.Player.Block.started += BlockStarted;
+            _playerInput.Player.Block.performed += BlockPerformed;
+            _playerInput.Player.Block.canceled += BlockCancelled;
 
             _playerInput.Player.Roll.performed += RollPerformed;
-            
-            _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-            _playerInputQuery = _entityManager.CreateEntityQuery(typeof(InputData));
         }
 
         public void Dispose() {
@@ -41,102 +43,57 @@ namespace Darkness.Runtime.Gameplay {
             
             _playerInput.Player.Roll.performed -= RollPerformed;
             
-            Disable();        
-        }
-        
-        private void RollPerformed(InputAction.CallbackContext context) {
-            if (!_entityManager.Exists(_playerEntity)) {
-                return;
-            }
-
-            var inputData = _entityManager.GetComponentData<InputData>(_playerEntity);
-            inputData.Roll = true;
-            _entityManager.SetComponentData(_playerEntity, inputData);
-        }
-
-        private void Disable() {
             _playerInput.Disable();
         }
         
-        private void Enable() {
-            _playerInput.Enable();
+        private void RollPerformed(InputAction.CallbackContext context) {
+                        
         }
-
+        
         private void AttackStarted(InputAction.CallbackContext context) {
             
         }
 
         private void AttackPerformed(InputAction.CallbackContext context) {
-            if (!_entityManager.Exists(_playerEntity)) {
-                return;
-            }
-
-            var inputData = _entityManager.GetComponentData<InputData>(_playerEntity);
-            if (context.interaction is SlowTapInteraction) {
-                inputData.SlowAttack = true;
-            }
-            else {
-                inputData.Attack = true;
-            }
-            _entityManager.SetComponentData(_playerEntity, inputData);
+            _inputPublisher.Publish(context.interaction is SlowTapInteraction
+                ? new PerformInputMessage {
+                    Type = PerformInputMessage.InputType.Attack, 
+                    Phase  = PerformInputMessage.InputPhase.Performed,
+                    IsSlowAttack = true
+                }
+                : new PerformInputMessage {
+                    Type = PerformInputMessage.InputType.Attack,
+                    Phase = PerformInputMessage.InputPhase.Performed,
+                    IsSlowAttack = false
+                });
         }
         
         private void AttackCancelled(InputAction.CallbackContext context) {
-            // if (!_entityManager.Exists(_playerEntity)) {
-            //     return;
-            // }
-            //
-            // var inputData = _entityManager.GetComponentData<InputData>(_playerEntity);
-            // inputData.Attack = false;
-            // _entityManager.SetComponentData(_playerEntity, inputData);
         }
 
-
         private void MoveCanceled(InputAction.CallbackContext obj) {
-            if (!_entityManager.Exists(_playerEntity)) {
-                return;
-            }
-
-            var inputData = _entityManager.GetComponentData<InputData>(_playerEntity);
-            inputData.MoveValue = float2.zero;
-            
-            _entityManager.SetComponentData(_playerEntity, inputData);
         }
 
         private void MovePreformed(InputAction.CallbackContext context) {
-            if (!_entityManager.Exists(_playerEntity)) {
-                return;
-            }
-
-            var inputValue = context.ReadValue<Vector2>();
-            var inputData = _entityManager.GetComponentData<InputData>(_playerEntity);
-            inputData.MoveValue = new float2(inputValue.x, inputValue.y);
-            _entityManager.SetComponentData(_playerEntity, inputData);
-        }
-
-        public void Tick() {
-            if (_playerEntity == Entity.Null) {
-                if (_playerInputQuery.IsEmpty) {
-                    return;
-                }
-            
-                _playerEntity = _playerInputQuery.GetSingletonEntity();
-            }
-            
-            CheckForInteract();
         }
         
-        private void CheckForInteract() {
-            var playerEntity = _playerInputQuery.GetSingletonEntity();
-            var inputData = _entityManager.GetComponentData<InputData>(playerEntity);
-            if (_playerInput.Player.Interact.WasPressedThisFrame()) {
-                inputData.InteractPressed = true;
-                _entityManager.SetComponentData(playerEntity, inputData);
-            }
-            else if(inputData.InteractPressed) {
-                inputData.InteractPressed = false;
-                _entityManager.SetComponentData(playerEntity, inputData);
-            }
+        private void BlockStarted(InputAction.CallbackContext context) {
+            
+        }
+
+        private void BlockPerformed(InputAction.CallbackContext context) {
+            _inputPublisher.Publish(new PerformInputMessage {
+                Type = PerformInputMessage.InputType.Block,
+                Phase = PerformInputMessage.InputPhase.Performed
+            });
+        }
+
+        private void BlockCancelled(InputAction.CallbackContext context) {
+            _inputPublisher.Publish(new PerformInputMessage {
+                Type = PerformInputMessage.InputType.Block,
+                Phase = PerformInputMessage.InputPhase.Cancelled
+            });
+
         }
     }
 }

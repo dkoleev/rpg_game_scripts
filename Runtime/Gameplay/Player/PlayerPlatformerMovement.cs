@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using Darkness.Runtime.ScriptableObjects;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Darkness.Runtime.Experimental {
+namespace Darkness.Runtime.Gameplay.Player {
 	public class PlayerPlatformerMovement : MonoBehaviour {
 		//Scriptable object which holds all the player's movement parameters. If you don't want to use it
 		//just paste in all the parameters, though you will need to manuly change all references in this script

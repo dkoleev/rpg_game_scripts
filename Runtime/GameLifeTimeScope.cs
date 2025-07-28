@@ -1,6 +1,8 @@
 ﻿using Darkness.Runtime.Experimental;
 using Darkness.Runtime.Gameplay;
+using Darkness.Runtime.Gameplay.Player;
 using Darkness.Runtime.Log;
+using Darkness.Runtime.Messages;
 using Darkness.Runtime.Utils.Resource;
 using MessagePipe;
 using VContainer;
@@ -9,8 +11,23 @@ using VContainer.Unity;
 namespace Darkness.Runtime {
     public class GameLifeTimeScope : LifetimeScope {
         protected override void Configure(IContainerBuilder builder) {
+            RegisterMessagePipe(builder);
+            builder.Register<GameLogger>(Lifetime.Singleton);
+            builder.Register<AddressableLoader>(Lifetime.Singleton);
+            builder.Register<PlayerPlatformerAttack>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
+            builder.RegisterEntryPoint<InputHandler>();
+
+            // builder.RegisterEntryPoint<Boot>();
+            
+            // builder.Register<EntityViewManager>(Lifetime.Singleton);
+            // builder.RegisterSystemFromDefaultWorld<EntityViewSyncSystem>();
+        }
+
+        private void RegisterMessagePipe(IContainerBuilder builder) {
             // RegisterMessagePipe returns options.
-            var options = builder.RegisterMessagePipe( /* configure option */);
+            var options = builder.RegisterMessagePipe(pipeOptions => {
+                pipeOptions.EnableCaptureStackTrace = true;
+            });
             // Setup GlobalMessagePipe to enable a diagnostics window and global function
             builder.RegisterBuildCallback(c => GlobalMessagePipe.SetProvider(c.AsServiceProvider()));
 
@@ -25,15 +42,8 @@ namespace Darkness.Runtime {
             // RegisterMessageHandlerFilter: Register for filter, also exists RegisterAsyncMessageHandlerFilter, Register(Async)RequestHandlerFilter
             //builder.RegisterMessageHandlerFilter<MyFilter<int>>();
 
-            builder.Register<GameLogger>(Lifetime.Singleton);
-            builder.Register<AddressableLoader>(Lifetime.Singleton);
-            builder.Register<PlayerPlatformerAttack>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
-
-            // builder.RegisterEntryPoint<Boot>();
-            // builder.RegisterEntryPoint<InputHandler>();
-            
-            // builder.Register<EntityViewManager>(Lifetime.Singleton);
-            // builder.RegisterSystemFromDefaultWorld<EntityViewSyncSystem>();
+         
+            // builder.RegisterMessageBroker<PerformAttackInputMessage>(options);
         }
     }
 }
