@@ -68,24 +68,5 @@ namespace Darkness.Runtime.Gameplay.Player {
         public void Dispose() {
             _disposable?.Dispose();
         }
-
-        private void AttackStarted(InputAction.CallbackContext context) {
-            
-        }
-
-        private void AttackPerformed(InputAction.CallbackContext context) {
-            if (context.interaction is SlowTapInteraction) {
-                OnPerformAttack?.Invoke(AttackType.Slow);
-            }
-            else {
-                OnPerformAttack?.Invoke(AttackType.Default);
-            }
-        }
-        
-        private void AttackCancelled(InputAction.CallbackContext context) {
-            
-        }
-        
-        
     }
 }
