@@ -8,8 +8,13 @@ using PlayerInput = Darkness.Runtime.Input.PlayerInput;
 
 namespace Darkness.Runtime.Experimental {
     public class PlayerPlatformerAttack : IStartable, IDisposable {
-        public event Action OnPerformAttack;
-        public event Action OnPerformSlowAttack;
+        public enum AttackType {
+            Default,
+            Slow,
+            Sit
+        }
+        
+        public event Action<AttackType> OnPerformAttack;
         public event Action<bool> OnBlocking;
         public bool IsBlocking { get; private set; }
         
@@ -50,10 +55,10 @@ namespace Darkness.Runtime.Experimental {
 
         private void AttackPerformed(InputAction.CallbackContext context) {
             if (context.interaction is SlowTapInteraction) {
-                OnPerformSlowAttack?.Invoke();
+                OnPerformAttack?.Invoke(AttackType.Slow);
             }
             else {
-                OnPerformAttack?.Invoke();
+                OnPerformAttack?.Invoke(AttackType.Default);
             }
         }
         

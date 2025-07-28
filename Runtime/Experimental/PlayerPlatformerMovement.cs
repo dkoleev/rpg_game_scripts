@@ -251,8 +251,11 @@ namespace Darkness.Runtime.Experimental {
 			#region GRAVITY
 
 			if (!_isDashAttacking && !_isSlideAttacking) {
+				if (IsSitting) {
+					RB.linearVelocity = Vector2.zero;
+				}
 				//Higher gravity if we've released the jump input or are falling
-				if (RB.linearVelocity.y < 0 && _moveInput.y < 0) {
+				else if (RB.linearVelocity.y < 0 && _moveInput.y < 0) {
 					//Much higher gravity if holding down
 					SetGravityScale(Data.gravityScale * Data.fastFallGravityMult);
 					//Caps maximum fall speed, so when falling over large distances we don't accelerate to insanely high speeds
@@ -292,10 +295,12 @@ namespace Darkness.Runtime.Experimental {
 		private void FixedUpdate() {
 			//Handle Run
 			if (!IsDashing && !IsSliding) {
-				if (IsWallJumping)
+				if (IsWallJumping) {
 					Run(Data.wallJumpRunLerp);
-				else
+				}
+				else if (!IsSitting) {
 					Run(1);
+				}
 			}
 			else if (_isDashAttacking) {
 				Run(Data.dashEndRunLerp);

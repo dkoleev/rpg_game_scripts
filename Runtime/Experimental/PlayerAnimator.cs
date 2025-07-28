@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using VContainer;
 
 namespace Darkness.Runtime.Experimental {
@@ -9,6 +10,7 @@ namespace Darkness.Runtime.Experimental {
         private static readonly int Jump = Animator.StringToHash("Jump");
         private static readonly int SlowAttack = Animator.StringToHash("SlowAttack");
         private static readonly int Attack = Animator.StringToHash("Attack");
+        private static readonly int SitAttack = Animator.StringToHash("AttackSit");
         private static readonly int Dash = Animator.StringToHash("Dash");
         private static readonly int Slide = Animator.StringToHash("Slide");
 
@@ -26,7 +28,6 @@ namespace Darkness.Runtime.Experimental {
         public void Construct(PlayerPlatformerAttack attack) {
             _attack = attack;
             _attack.OnPerformAttack += PlayAttack;
-            _attack.OnPerformSlowAttack += PlaySlowAttack;
             _attack.OnBlocking += SetBlock;
         }
 
@@ -70,12 +71,18 @@ namespace Darkness.Runtime.Experimental {
             _anim.SetFloat(VelocityX, Mathf.Abs(_mov.RB.linearVelocity.x));
         }
 
-        private void PlayAttack() {
-            _anim.SetTrigger(Attack);
-        }
-
-        private void PlaySlowAttack() {
-            _anim.SetTrigger(SlowAttack);
+        private void PlayAttack(PlayerPlatformerAttack.AttackType attackType) {
+            switch (attackType) {
+                case PlayerPlatformerAttack.AttackType.Default:
+                case PlayerPlatformerAttack.AttackType.Sit:
+                    _anim.SetTrigger(_mov.IsSitting ? SitAttack : Attack);
+                    break;
+                case PlayerPlatformerAttack.AttackType.Slow:
+                    _anim.SetTrigger(SlowAttack);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(attackType), attackType, null);
+            }
         }
 
         private void SetBlock(bool isBlocking) {
