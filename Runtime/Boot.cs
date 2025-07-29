@@ -4,7 +4,9 @@ using Cysharp.Threading.Tasks;
 using Darkness.Runtime.Core;
 using Darkness.Runtime.ECS.Components;
 using Darkness.Runtime.ECS.Components.Tags;
+using Darkness.Runtime.Gameplay;
 using Darkness.Runtime.Log;
+using Darkness.Runtime.ScriptableObjects;
 using Darkness.Runtime.Utils.Resource;
 using DG.Tweening;
 using SuperTiled2Unity;
@@ -40,7 +42,15 @@ namespace Darkness.Runtime {
             LoadPlayerState();
             
             await LoadScenes();
+            await SpawnPlayer();
             // SpawnCharacters();            
+        }
+
+        private async UniTask SpawnPlayer() {
+            var playerResult = await _addressableLoader.LoadAddressable<GameObject>("").Await();
+            playerResult.Match(player => {
+                
+            }, _gameLogger.Error);
         }
         
         private void LoadGameData() { }

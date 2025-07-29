@@ -24,16 +24,20 @@ namespace Darkness.Runtime.Gameplay.Player {
         private PlayerPlatformerAttack _attack;
         private bool _isSitting;
 
-        [Inject]
-        public void Construct(PlayerPlatformerAttack attack) {
-            _attack = attack;
+        private void Awake() {
+            _attack = GetComponent<PlayerPlatformerAttack>();
+            _mov = GetComponent<PlayerPlatformerMovement>();
+            _anim = transform.GetComponentInChildren<Animator>();
+        }
+
+        private void OnEnable() {
             _attack.OnPerformAttack += PlayAttack;
             _attack.OnBlocking += SetBlock;
         }
 
-        private void Start() {
-            _mov = GetComponent<PlayerPlatformerMovement>();
-            _anim = transform.GetComponentInChildren<Animator>();
+        private void OnDisable() {
+            _attack.OnPerformAttack -= PlayAttack;
+            _attack.OnBlocking -= SetBlock;
         }
 
         private void LateUpdate() {

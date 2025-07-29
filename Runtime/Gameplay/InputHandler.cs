@@ -10,14 +10,13 @@ using PlayerInput = Darkness.Runtime.Input.PlayerInput;
 namespace Darkness.Runtime.Gameplay {
     [UsedImplicitly]
     public class InputHandler : IStartable, IDisposable {
-        private readonly IPublisher<PerformInputMessage> _inputPublisher;
+        private IPublisher<PerformInputMessage> _inputPublisher;
         private PlayerInput _playerInput;
 
-        public InputHandler(IPublisher<PerformInputMessage> inputPublisher) {
-            _inputPublisher = inputPublisher;
-        }
-
         void IStartable.Start() {
+            _inputPublisher = GlobalMessagePipe.GetPublisher<PerformInputMessage>();
+            var sub = GlobalMessagePipe.GetSubscriber<PerformInputMessage>();
+            
             _playerInput = new PlayerInput();
             _playerInput.Enable();
             _playerInput.Player.Move.performed += MovePreformed;
@@ -93,7 +92,6 @@ namespace Darkness.Runtime.Gameplay {
                 Type = PerformInputMessage.InputType.Block,
                 Phase = PerformInputMessage.InputPhase.Cancelled
             });
-
         }
     }
 }

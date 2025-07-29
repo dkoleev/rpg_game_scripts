@@ -3,18 +3,24 @@ using Darkness.Runtime.Gameplay;
 using Darkness.Runtime.Gameplay.Player;
 using Darkness.Runtime.Log;
 using Darkness.Runtime.Messages;
+using Darkness.Runtime.ScriptableObjects;
 using Darkness.Runtime.Utils.Resource;
 using MessagePipe;
+using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 
 namespace Darkness.Runtime {
     public class GameLifeTimeScope : LifetimeScope {
         protected override void Configure(IContainerBuilder builder) {
-            RegisterMessagePipe(builder);
+            // RegisterMessagePipe(builder);
+
+            // builder.RegisterInstance(gameSettings.PlayerSettings);
+            // builder.RegisterInstance(gameSettings.CharactersViewRef);
+            
             builder.Register<GameLogger>(Lifetime.Singleton);
             builder.Register<AddressableLoader>(Lifetime.Singleton);
-            builder.Register<PlayerPlatformerAttack>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
+            // builder.Register<PlayerPlatformerAttack>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
             builder.RegisterEntryPoint<InputHandler>();
 
             // builder.RegisterEntryPoint<Boot>();
