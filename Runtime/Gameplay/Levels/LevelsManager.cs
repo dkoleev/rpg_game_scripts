@@ -1,6 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using Darkness.Runtime.ScriptableObjects;
 using Darkness.Runtime.Utils.Resource;
+using UnityEngine.ResourceManagement.ResourceProviders;
 using UnityEngine.SceneManagement;
 using VContainer;
 
@@ -15,8 +16,13 @@ namespace Darkness.Runtime.Gameplay.Levels {
             _addressableLoader = addressableLoader;
         }
 
-        public async UniTask LoadLevel(LevelType levelType) {
-            await _addressableLoader.LoadScene(_levelsListData.levels[levelType], LoadSceneMode.Additive);
+        public async UniTask<SceneInstance> LoadLevel(LevelType levelType, bool activateOnLoad = true ) {
+            var sceneInstance = await _addressableLoader.LoadScene(_levelsListData.levels[levelType], LoadSceneMode.Additive, activateOnLoad);
+            return sceneInstance;
+        }
+        
+        public void UnloadLevel(SceneInstance sceneInstance) {
+            _addressableLoader.UnloadSceneAsync(sceneInstance).Forget();
         }
     }
 }

@@ -14,6 +14,7 @@ using VContainer.Unity;
 namespace Darkness.Runtime {
     public class GameLifeTimeScope : LifetimeScope {
         [SerializeField] private LevelsListData levelsListData;
+        [SerializeField] private CharactersListData charactersListData;
         
         protected override void Configure(IContainerBuilder builder) {
             // RegisterMessagePipe(builder);
@@ -21,10 +22,12 @@ namespace Darkness.Runtime {
             // builder.RegisterInstance(gameSettings.PlayerSettings);
             // builder.RegisterInstance(gameSettings.CharactersViewRef);
             builder.RegisterInstance(levelsListData);
+            builder.RegisterInstance(charactersListData);
             
             builder.Register<GameLogger>(Lifetime.Singleton);
             builder.Register<AddressableLoader>(Lifetime.Singleton);
             builder.Register<LevelsManager>(Lifetime.Singleton);
+            builder.Register<SpawnManager>(Lifetime.Singleton);
 
             builder.RegisterEntryPoint<InputHandler>();
             builder.RegisterEntryPoint<Boot>();

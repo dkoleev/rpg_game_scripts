@@ -4,11 +4,15 @@ namespace Darkness.Runtime.Gameplay {
     public class CameraTarget : MonoBehaviour {
         private Transform _target;
         
-        private void Awake() {
-            _target = GameObject.FindGameObjectWithTag("Player").transform;    
+        public void SetTarget(Transform target) {
+            _target = target;
         }
 
         private void Update() {
+            if (_target is null) {
+                return;
+            }
+            
             transform.position = _target.position;
         }
     }

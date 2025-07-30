@@ -1,6 +1,7 @@
 ﻿using System;
 using Cysharp.Threading.Tasks;
 using Darkness.Runtime.Core;
+using Darkness.Runtime.Gameplay;
 using Darkness.Runtime.Gameplay.Levels;
 using Darkness.Runtime.Log;
 using Darkness.Runtime.Utils.Resource;
@@ -10,18 +11,26 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using VContainer;
 using VContainer.Unity;
+using CameraTarget = Darkness.Runtime.Gameplay.CameraTarget;
 
 namespace Darkness.Runtime {
     public class Boot : IStartable, IDisposable {
         private readonly GameLogger _gameLogger;
         private readonly AddressableLoader _addressableLoader;
         private readonly LevelsManager _levelsManager;
+        private readonly SpawnManager _spawnManager;
 
         [Inject]
-        private Boot(GameLogger gameLogger, AddressableLoader addressableLoader, LevelsManager levelsManager) {
+        private Boot(
+            GameLogger gameLogger, 
+            AddressableLoader addressableLoader, 
+            LevelsManager levelsManager,
+            SpawnManager spawnManager
+            ) {
             _gameLogger = gameLogger;
             _addressableLoader = addressableLoader;
             _levelsManager = levelsManager;
+            _spawnManager = spawnManager;
         }
 
         void IStartable.Start() {
@@ -34,19 +43,23 @@ namespace Darkness.Runtime {
             LoadGameData();
             LoadPlayerState();
 
-            var bootScene = SceneManager.GetActiveScene();
+            var startScene = SceneManager.GetActiveScene();
+            var bootScene = await _levelsManager.LoadLevel(LevelType.Boot);
+            await SceneManager.UnloadSceneAsync(startScene);
             await _levelsManager.LoadLevel(LevelType.Tutorial);
-            SceneManager.UnloadSceneAsync(bootScene);
-            // await LoadScenes();
-            // await SpawnPlayer();
-            // SpawnCharacters();            
+            _levelsManager.UnloadLevel(bootScene);
+
+            var player = await SpawnPlayer();
+            var cameraTarget = GameObject.FindGameObjectWithTag("CameraTarget").GetComponent<CameraTarget>();
+            cameraTarget.SetTarget(player.transform);
+            SetCameraInstantlyToPosition(cameraTarget.transform);
         }
 
-        private async UniTask SpawnPlayer() {
-            var playerResult = await _addressableLoader.LoadAddressable<GameObject>("").Await();
-            playerResult.Match(player => {
-                
-            }, _gameLogger.Error);
+        private async UniTask<GameObject> SpawnPlayer() {
+            var spawnPoint = GameObject.FindGameObjectWithTag("SpawnPoint");
+            var playerGo = await _spawnManager.SpawnCharacter(CharacterType.Player, spawnPoint.transform.position);
+
+            return playerGo;
         }
         
         private void LoadGameData() { }
@@ -89,6 +102,17 @@ namespace Darkness.Runtime {
                 }
             }
         }*/
+
+        private void SetCameraInstantlyToPosition(Transform targetTransform) {
+            var brain = Camera.main.GetComponent<CinemachineBrain>();
+            CinemachineCamera liveCam;
+            if (brain.ActiveVirtualCamera is CinemachineCameraManagerBase managerCam)
+                liveCam = managerCam.LiveChild as CinemachineCamera;
+            else
+                liveCam = brain.ActiveVirtualCamera as CinemachineCamera;
+
+            liveCam.ForceCameraPosition(targetTransform.position, Quaternion.identity);
+        }
 
         private void InitializeCamera(Transform targetTransform) {
             var brain = Camera.main.GetComponent<CinemachineBrain>();

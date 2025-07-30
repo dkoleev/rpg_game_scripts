@@ -21,6 +21,13 @@ namespace Darkness.Runtime.Utils.Resource {
             var task = LoadAddressableAsync<T>(key);
             return AsyncResult<T>.FromTask(task);
         }
+        
+        public async UniTask<T> LoadAddressable<T>(AssetReference assetReference) {
+            var task = LoadAddressableAsync<T>(assetReference);
+            var result = await AsyncResult<T>.FromTask(task).Await();
+
+            return result.Value;
+        }
 
         private async UniTask<Result<T>> LoadAddressableAsync<T>(string key) {
             var handle = Addressables.LoadAssetAsync<T>(key);
@@ -41,24 +48,48 @@ namespace Darkness.Runtime.Utils.Resource {
                 return Result<T>.Fail($"Error loading addressable {key}: {e.Message}");
             }
         }
+        
+        private async UniTask<Result<T>> LoadAddressableAsync<T>(AssetReference assetReference) {
+            
+            var handle = assetReference.LoadAssetAsync<T>();
+            try {
+                await handle.ToUniTask();
+
+                if (handle.Status == AsyncOperationStatus.Succeeded) {
+                    return Result<T>.Success(handle.Result);
+                }
+                else {
+                    Addressables.Release(handle);
+                    return Result<T>.Fail($"Failed to load addressable: {assetReference.RuntimeKey}");
+                }
+            }
+            catch (Exception e) {
+                Addressables.Release(handle);
+                return Result<T>.Fail($"Error loading addressable {assetReference.RuntimeKey}: {e.Message}");
+            }
+        }
 
         public AsyncResult<SceneInstance> LoadScene(string key, LoadSceneMode loadMode = LoadSceneMode.Single) {
             var task = LoadSceneAsync(key, loadMode);
             return AsyncResult<SceneInstance>.FromTask(task);
         }
         
-        public async UniTask LoadScene(AssetReference assetReference, LoadSceneMode loadMode = LoadSceneMode.Single) {
-            var task = LoadSceneAsync(assetReference, loadMode);
+        public async UniTask<SceneInstance> LoadScene(AssetReference assetReference, LoadSceneMode loadMode = LoadSceneMode.Single, bool activateOnLoad = true) {
+            var task = LoadSceneAsync(assetReference, loadMode, activateOnLoad);
             var sceneResult = await AsyncResult<SceneInstance>.FromTask(task).Await();
             sceneResult.Match(
-                scene => { _gameLogger.Log($"{sceneResult.Value.Scene.name} scene loaded successfully"); },
+                scene => {
+                    _gameLogger.Log($"{sceneResult.Value.Scene.name} scene loaded successfully");
+                },
                 error => { _gameLogger.Error($"Failed to load {sceneResult.Value.Scene.name} scene: {error}"); }
             );
+
+            return sceneResult.Value;
         }
         
         private async UniTask<Result<SceneInstance>> LoadSceneAsync(AssetReference assetReference,
-            LoadSceneMode loadMode = LoadSceneMode.Single) {
-            var handle = assetReference.LoadSceneAsync(loadMode);
+            LoadSceneMode loadMode = LoadSceneMode.Single, bool activateOnLoad = true) {
+            var handle = assetReference.LoadSceneAsync(loadMode, activateOnLoad);
 
             try {
                 await handle.ToUniTask();
@@ -124,6 +155,24 @@ namespace Darkness.Runtime.Utils.Resource {
             catch (Exception e) {
                 Addressables.Release(handle);
                 return Result<SceneInstance>.Fail($"Error loading scene {key}: {e.Message}");
+            }
+        }
+        
+        public async UniTask<Result<bool>> UnloadSceneAsync(SceneInstance sceneInstance) {
+            var unloadHandle = Addressables.UnloadSceneAsync(sceneInstance);
+
+            try {
+                await unloadHandle.ToUniTask();
+
+                if (unloadHandle.Status == AsyncOperationStatus.Succeeded) {
+                    return Result<bool>.Success(true);
+                }
+                else {
+                    return Result<bool>.Fail("Failed to unload scene.");
+                }
+            }
+            catch (Exception e) {
+                return Result<bool>.Fail($"Error unloading scene: {e.Message}");
             }
         }
     }
