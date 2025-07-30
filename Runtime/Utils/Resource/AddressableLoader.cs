@@ -1,6 +1,8 @@
 ﻿using System;
 using Cysharp.Threading.Tasks;
+using Darkness.Runtime.Log;
 using Darkness.Runtime.Utils.CustomTypes;
+using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -9,6 +11,12 @@ using UnityEngine.SceneManagement;
 
 namespace Darkness.Runtime.Utils.Resource {
     public class AddressableLoader {
+        private readonly GameLogger _gameLogger;
+
+        public AddressableLoader(GameLogger gameLogger) {
+            _gameLogger = gameLogger;
+        }
+        
         public AsyncResult<T> LoadAddressable<T>(string key) {
             var task = LoadAddressableAsync<T>(key);
             return AsyncResult<T>.FromTask(task);
@@ -37,6 +45,36 @@ namespace Darkness.Runtime.Utils.Resource {
         public AsyncResult<SceneInstance> LoadScene(string key, LoadSceneMode loadMode = LoadSceneMode.Single) {
             var task = LoadSceneAsync(key, loadMode);
             return AsyncResult<SceneInstance>.FromTask(task);
+        }
+        
+        public async UniTask LoadScene(AssetReference assetReference, LoadSceneMode loadMode = LoadSceneMode.Single) {
+            var task = LoadSceneAsync(assetReference, loadMode);
+            var sceneResult = await AsyncResult<SceneInstance>.FromTask(task).Await();
+            sceneResult.Match(
+                scene => { _gameLogger.Log($"{sceneResult.Value.Scene.name} scene loaded successfully"); },
+                error => { _gameLogger.Error($"Failed to load {sceneResult.Value.Scene.name} scene: {error}"); }
+            );
+        }
+        
+        private async UniTask<Result<SceneInstance>> LoadSceneAsync(AssetReference assetReference,
+            LoadSceneMode loadMode = LoadSceneMode.Single) {
+            var handle = assetReference.LoadSceneAsync(loadMode);
+
+            try {
+                await handle.ToUniTask();
+
+                if (handle.Status == AsyncOperationStatus.Succeeded) {
+                    return Result<SceneInstance>.Success(handle.Result);
+                }
+                else {
+                    Addressables.Release(handle);
+                    return Result<SceneInstance>.Fail($"Failed to load scene: {assetReference.RuntimeKey}");
+                }
+            }
+            catch (Exception e) {
+                Addressables.Release(handle);
+                return Result<SceneInstance>.Fail($"Error loading scene {assetReference.RuntimeKey}: {e.Message}");
+            }
         }
 
         private async UniTask<Result<SceneInstance>> LoadSceneAsync(string key,

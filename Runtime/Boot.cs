@@ -1,34 +1,27 @@
 ﻿using System;
-using System.IO;
 using Cysharp.Threading.Tasks;
 using Darkness.Runtime.Core;
-using Darkness.Runtime.ECS.Components;
-using Darkness.Runtime.ECS.Components.Tags;
-using Darkness.Runtime.Gameplay;
+using Darkness.Runtime.Gameplay.Levels;
 using Darkness.Runtime.Log;
-using Darkness.Runtime.ScriptableObjects;
 using Darkness.Runtime.Utils.Resource;
 using DG.Tweening;
-using SuperTiled2Unity;
 using Unity.Cinemachine;
-using Unity.Entities;
-using Unity.Mathematics;
-using Unity.Scenes;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using VContainer;
 using VContainer.Unity;
-using Object = UnityEngine.Object;
 
 namespace Darkness.Runtime {
     public class Boot : IStartable, IDisposable {
         private readonly GameLogger _gameLogger;
         private readonly AddressableLoader _addressableLoader;
+        private readonly LevelsManager _levelsManager;
 
         [Inject]
-        private Boot(GameLogger gameLogger, AddressableLoader addressableLoader) {
+        private Boot(GameLogger gameLogger, AddressableLoader addressableLoader, LevelsManager levelsManager) {
             _gameLogger = gameLogger;
             _addressableLoader = addressableLoader;
+            _levelsManager = levelsManager;
         }
 
         void IStartable.Start() {
@@ -41,8 +34,9 @@ namespace Darkness.Runtime {
             LoadGameData();
             LoadPlayerState();
             
-            await LoadScenes();
-            await SpawnPlayer();
+            _levelsManager.LoadLevel(LevelType.Tutorial);
+            // await LoadScenes();
+            // await SpawnPlayer();
             // SpawnCharacters();            
         }
 

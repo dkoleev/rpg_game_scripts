@@ -1,5 +1,6 @@
 ﻿using Darkness.Runtime.Experimental;
 using Darkness.Runtime.Gameplay;
+using Darkness.Runtime.Gameplay.Levels;
 using Darkness.Runtime.Gameplay.Player;
 using Darkness.Runtime.Log;
 using Darkness.Runtime.Messages;
@@ -12,18 +13,21 @@ using VContainer.Unity;
 
 namespace Darkness.Runtime {
     public class GameLifeTimeScope : LifetimeScope {
+        [SerializeField] private LevelsListData levelsListData;
+        
         protected override void Configure(IContainerBuilder builder) {
             // RegisterMessagePipe(builder);
 
             // builder.RegisterInstance(gameSettings.PlayerSettings);
             // builder.RegisterInstance(gameSettings.CharactersViewRef);
+            builder.RegisterInstance(levelsListData);
             
             builder.Register<GameLogger>(Lifetime.Singleton);
             builder.Register<AddressableLoader>(Lifetime.Singleton);
-            // builder.Register<PlayerPlatformerAttack>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
-            builder.RegisterEntryPoint<InputHandler>();
+            builder.Register<LevelsManager>(Lifetime.Singleton);
 
-            // builder.RegisterEntryPoint<Boot>();
+            builder.RegisterEntryPoint<InputHandler>();
+            builder.RegisterEntryPoint<Boot>();
             
             // builder.Register<EntityViewManager>(Lifetime.Singleton);
             // builder.RegisterSystemFromDefaultWorld<EntityViewSyncSystem>();

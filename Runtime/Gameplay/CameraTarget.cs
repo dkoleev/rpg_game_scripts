@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Darkness.Runtime.MonoBeh {
+namespace Darkness.Runtime.Gameplay {
     public class CameraTarget : MonoBehaviour {
         private Transform _target;
         
