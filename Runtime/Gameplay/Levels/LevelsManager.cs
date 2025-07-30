@@ -15,8 +15,8 @@ namespace Darkness.Runtime.Gameplay.Levels {
             _addressableLoader = addressableLoader;
         }
 
-        public void LoadLevel(LevelType levelType) {
-            _addressableLoader.LoadScene(_levelsListData.levels[levelType], LoadSceneMode.Additive).Forget();
+        public async UniTask LoadLevel(LevelType levelType) {
+            await _addressableLoader.LoadScene(_levelsListData.levels[levelType], LoadSceneMode.Additive);
         }
     }
 }

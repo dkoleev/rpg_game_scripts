@@ -33,8 +33,10 @@ namespace Darkness.Runtime {
             DOTween.Init(false, false, LogBehaviour.Default).SetCapacity(100, 30);
             LoadGameData();
             LoadPlayerState();
-            
-            _levelsManager.LoadLevel(LevelType.Tutorial);
+
+            var bootScene = SceneManager.GetActiveScene();
+            await _levelsManager.LoadLevel(LevelType.Tutorial);
+            SceneManager.UnloadSceneAsync(bootScene);
             // await LoadScenes();
             // await SpawnPlayer();
             // SpawnCharacters();            
