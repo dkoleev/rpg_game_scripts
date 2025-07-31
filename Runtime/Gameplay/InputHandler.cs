@@ -10,12 +10,11 @@ using PlayerInput = Darkness.Runtime.Input.PlayerInput;
 namespace Darkness.Runtime.Gameplay {
     [UsedImplicitly]
     public class InputHandler : IStartable, IDisposable {
-        private IPublisher<PerformInputMessage> _inputPublisher;
+        private IPublisher<InputMessage> _inputPublisher;
         private PlayerInput _playerInput;
 
         void IStartable.Start() {
-            _inputPublisher = GlobalMessagePipe.GetPublisher<PerformInputMessage>();
-            var sub = GlobalMessagePipe.GetSubscriber<PerformInputMessage>();
+            _inputPublisher = GlobalMessagePipe.GetPublisher<InputMessage>();
             
             _playerInput = new PlayerInput();
             _playerInput.Enable();
@@ -55,14 +54,14 @@ namespace Darkness.Runtime.Gameplay {
 
         private void AttackPerformed(InputAction.CallbackContext context) {
             _inputPublisher.Publish(context.interaction is SlowTapInteraction
-                ? new PerformInputMessage {
-                    Type = PerformInputMessage.InputType.Attack, 
-                    Phase  = PerformInputMessage.InputPhase.Performed,
+                ? new InputMessage {
+                    Type = InputMessage.InputType.Attack, 
+                    Phase  = InputMessage.InputPhase.Performed,
                     IsSlowAttack = true
                 }
-                : new PerformInputMessage {
-                    Type = PerformInputMessage.InputType.Attack,
-                    Phase = PerformInputMessage.InputPhase.Performed,
+                : new InputMessage {
+                    Type = InputMessage.InputType.Attack,
+                    Phase = InputMessage.InputPhase.Performed,
                     IsSlowAttack = false
                 });
         }
@@ -81,16 +80,16 @@ namespace Darkness.Runtime.Gameplay {
         }
 
         private void BlockPerformed(InputAction.CallbackContext context) {
-            _inputPublisher.Publish(new PerformInputMessage {
-                Type = PerformInputMessage.InputType.Block,
-                Phase = PerformInputMessage.InputPhase.Performed
+            _inputPublisher.Publish(new InputMessage {
+                Type = InputMessage.InputType.Block,
+                Phase = InputMessage.InputPhase.Performed
             });
         }
 
         private void BlockCancelled(InputAction.CallbackContext context) {
-            _inputPublisher.Publish(new PerformInputMessage {
-                Type = PerformInputMessage.InputType.Block,
-                Phase = PerformInputMessage.InputPhase.Cancelled
+            _inputPublisher.Publish(new InputMessage {
+                Type = InputMessage.InputType.Block,
+                Phase = InputMessage.InputPhase.Cancelled
             });
         }
     }

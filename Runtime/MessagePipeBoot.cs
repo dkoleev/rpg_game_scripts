@@ -11,7 +11,7 @@ namespace Darkness.Runtime {
                 pipeOptions.EnableCaptureStackTrace = true;
             });
             
-            builder.AddMessageBroker<PerformInputMessage>();
+            builder.AddMessageBroker<InputMessage>();
             
             // create provider and set to Global(to enable diagnostics window and global fucntion)
             var provider = builder.BuildServiceProvider();

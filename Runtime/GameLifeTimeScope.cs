@@ -1,4 +1,5 @@
-﻿using Darkness.Runtime.Experimental;
+﻿using System;
+using Darkness.Runtime.Experimental;
 using Darkness.Runtime.Gameplay;
 using Darkness.Runtime.Gameplay.Levels;
 using Darkness.Runtime.Gameplay.Player;
@@ -29,6 +30,8 @@ namespace Darkness.Runtime {
             builder.Register<AddressableLoader>(Lifetime.Singleton);
             builder.Register<LevelsManager>(Lifetime.Singleton);
             builder.Register<SpawnManager>(Lifetime.Singleton);
+            builder.Register<SaveSystem>(Lifetime.Singleton);
+            builder.RegisterEntryPoint<ProgressAutoSaver>();
 
             builder.RegisterEntryPoint<InputHandler>();
             builder.RegisterEntryPoint<Boot>();

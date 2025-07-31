@@ -3,6 +3,7 @@ using Cysharp.Threading.Tasks;
 using Darkness.Runtime.Core;
 using Darkness.Runtime.Gameplay;
 using Darkness.Runtime.Gameplay.Levels;
+using Darkness.Runtime.Gameplay.Player;
 using Darkness.Runtime.Log;
 using Darkness.Runtime.Utils.Resource;
 using DG.Tweening;
@@ -19,18 +20,21 @@ namespace Darkness.Runtime {
         private readonly AddressableLoader _addressableLoader;
         private readonly LevelsManager _levelsManager;
         private readonly SpawnManager _spawnManager;
+        private readonly SaveSystem _saveSystem;
 
         [Inject]
         private Boot(
             GameLogger gameLogger, 
             AddressableLoader addressableLoader, 
             LevelsManager levelsManager,
-            SpawnManager spawnManager
+            SpawnManager spawnManager,
+            SaveSystem saveSystem
             ) {
             _gameLogger = gameLogger;
             _addressableLoader = addressableLoader;
             _levelsManager = levelsManager;
             _spawnManager = spawnManager;
+            _saveSystem = saveSystem;
         }
 
         void IStartable.Start() {
@@ -61,13 +65,17 @@ namespace Darkness.Runtime {
         private async UniTask<GameObject> SpawnPlayer() {
             var spawnPoint = GameObject.FindGameObjectWithTag("SpawnPoint");
             var playerGo = await _spawnManager.SpawnCharacter(CharacterType.Player, spawnPoint.transform.position);
-
+            var playerMovement = playerGo.GetComponent<PlayerPlatformerMovement>();
+            playerMovement.Init(_saveSystem);
+            
             return playerGo;
         }
         
         private void LoadGameData() { }
 
-        private void LoadPlayerState() { }
+        private void LoadPlayerState() {
+            _saveSystem.Load();
+        }
         
         private async UniTask LoadScenes() {
             // await LoadScene("Maps/Home");

@@ -1,5 +1,5 @@
 ﻿namespace Darkness.Runtime.Messages {
-    public struct PerformInputMessage {
+    public struct InputMessage {
         public enum InputType {
             Attack,
             Roll,

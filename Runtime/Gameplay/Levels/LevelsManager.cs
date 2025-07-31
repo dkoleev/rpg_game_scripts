@@ -9,15 +9,18 @@ namespace Darkness.Runtime.Gameplay.Levels {
     public class LevelsManager {
         private readonly LevelsList _levelsList;
         private readonly AddressableLoader _addressableLoader;
+        private readonly SaveSystem _saveSystem;
 
         [Inject]
-        public LevelsManager(LevelsList levelsList, AddressableLoader addressableLoader) {
+        public LevelsManager(LevelsList levelsList, AddressableLoader addressableLoader, SaveSystem saveSystem) {
             _levelsList = levelsList;
             _addressableLoader = addressableLoader;
+            _saveSystem = saveSystem;
         }
 
         public async UniTask<SceneInstance> LoadLevel(LevelType levelType, bool activateOnLoad = true ) {
             var sceneInstance = await _addressableLoader.LoadScene(_levelsList.levels[levelType], LoadSceneMode.Additive, activateOnLoad);
+            _saveSystem.Save();
             return sceneInstance;
         }
         

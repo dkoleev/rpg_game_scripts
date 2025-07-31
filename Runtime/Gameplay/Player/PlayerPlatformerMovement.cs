@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using Darkness.Runtime.ScriptableObjects;
+using Darkness.Runtime.State;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -18,7 +19,11 @@ namespace Darkness.Runtime.Gameplay.Player {
 		//Variables control the various actions the player can perform at any time.
 		//These are fields which can are public allowing for other sctipts to read them
 		//but can only be privately written to.
-		public bool IsFacingRight { get; private set; }
+		private bool IsFacingRight {
+			get => _playerState.isFacingRight;
+			set => _playerState.isFacingRight = value;
+		}
+
 		public bool IsJumping { get; private set; }
 		public bool IsWallJumping { get; private set; }
 		public bool IsDashing { get; private set; }
@@ -72,6 +77,12 @@ namespace Darkness.Runtime.Gameplay.Player {
 		private InputAction _jumpAction;
 		private InputAction _dashAction;
 		private InputAction _slideAction;
+
+		private PlayerState _playerState;
+		
+		public void Init(SaveSystem saveSystem) {
+			_playerState = saveSystem.Current.player;
+		}
 		
 		private void Awake() {
 			RB = GetComponent<Rigidbody2D>();
@@ -85,9 +96,12 @@ namespace Darkness.Runtime.Gameplay.Player {
 
 		private void Start() {
 			SetGravityScale(movementSettings.gravityScale);
-			IsFacingRight = true;
+			UpdateFacing();
+			if (_playerState.currentPosition != Vector2.zero) {
+				transform.position = _playerState.currentPosition;
+			}
 		}
-
+		
 		private void Update() {
 			LastOnGroundTime -= Time.deltaTime;
 			LastOnWallTime -= Time.deltaTime;
@@ -101,10 +115,10 @@ namespace Darkness.Runtime.Gameplay.Player {
 			_moveInput = _moveAction.ReadValue<Vector2>();
 			if (_moveInput.x > 0.01f && !IsFacingRight) {
 				IsFacingRight = true;
-				transform.rotation = Quaternion.Euler(0f, 0f, 0f);
+				UpdateFacing();
 			}else if (_moveInput.x < -0.01f && IsFacingRight) {
 				IsFacingRight = false;
-				transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+				UpdateFacing();
 			}
 
 			IsSitting = _moveInput.y < -0.9f && CanSit();
@@ -289,6 +303,8 @@ namespace Darkness.Runtime.Gameplay.Player {
 			}
 
 			#endregion
+			
+			_playerState.currentPosition = transform.position;
 		}
 
 		private void FixedUpdate() {
@@ -307,6 +323,10 @@ namespace Darkness.Runtime.Gameplay.Player {
 			else if (_isSlideAttacking) {
 				Run(movementSettings.slideEndRunLerp);
 			}
+		}
+		
+		private void UpdateFacing() {
+			transform.rotation = Quaternion.Euler(0f, IsFacingRight ? 0f : 180f, 0f);
 		}
 
 		//Methods which whandle input detected in Update()
