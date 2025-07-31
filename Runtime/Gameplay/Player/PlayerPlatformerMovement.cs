@@ -7,7 +7,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 	public class PlayerPlatformerMovement : MonoBehaviour {
 		//Scriptable object which holds all the player's movement parameters. If you don't want to use it
 		//just paste in all the parameters, though you will need to manuly change all references in this script
-		public PlayerData Data;
+		public PlayerMovementSettings movementSettings;
 
 		public Rigidbody2D RB { get; private set; }
 
@@ -84,7 +84,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 		}
 
 		private void Start() {
-			SetGravityScale(Data.gravityScale);
+			SetGravityScale(movementSettings.gravityScale);
 			IsFacingRight = true;
 		}
 
@@ -134,7 +134,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 						AnimHandler.JustLanded = true;
 					}
 
-					LastOnGroundTime = Data.coyoteTime; //if so sets the lastGrounded to coyoteTime
+					LastOnGroundTime = movementSettings.coyoteTime; //if so sets the lastGrounded to coyoteTime
 				}
 			}
 
@@ -144,14 +144,14 @@ namespace Darkness.Runtime.Gameplay.Player {
 				      IsFacingRight)
 				     || (Physics2D.OverlapBox(_backWallCheckPoint.position, _wallCheckSize, 0, _groundLayer) &&
 				         !IsFacingRight)) && !IsWallJumping)
-					LastOnWallRightTime = Data.coyoteTime;
+					LastOnWallRightTime = movementSettings.coyoteTime;
 
 				//Right Wall Check
 				if (((Physics2D.OverlapBox(_frontWallCheckPoint.position, _wallCheckSize, 0, _groundLayer) &&
 				      !IsFacingRight)
 				     || (Physics2D.OverlapBox(_backWallCheckPoint.position, _wallCheckSize, 0, _groundLayer) &&
 				         IsFacingRight)) && !IsWallJumping)
-					LastOnWallLeftTime = Data.coyoteTime;
+					LastOnWallLeftTime = movementSettings.coyoteTime;
 
 				//Two checks needed for both left and right walls since whenever the play turns the wall checkPoints swap sides
 				LastOnWallTime = Mathf.Max(LastOnWallLeftTime, LastOnWallRightTime);
@@ -163,7 +163,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 				_isJumpFalling = true;
 			}
 
-			if (IsWallJumping && Time.time - _wallJumpStartTime > Data.wallJumpTime) {
+			if (IsWallJumping && Time.time - _wallJumpStartTime > movementSettings.wallJumpTime) {
 				IsWallJumping = false;
 			}
 
@@ -203,7 +203,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 
 			if (CanDash() && LastPressedDashTime > 0) {
 				//Freeze game for split second. Adds juiciness and a bit of forgiveness over directional input
-				Sleep(Data.dashSleepTime);
+				Sleep(movementSettings.dashSleepTime);
 
 				//If not direction pressed, dash forward
 				if (_moveInput != Vector2.zero) {
@@ -256,31 +256,31 @@ namespace Darkness.Runtime.Gameplay.Player {
 				//Higher gravity if we've released the jump input or are falling
 				else if (RB.linearVelocity.y < 0 && _moveInput.y < 0) {
 					//Much higher gravity if holding down
-					SetGravityScale(Data.gravityScale * Data.fastFallGravityMult);
+					SetGravityScale(movementSettings.gravityScale * movementSettings.fastFallGravityMult);
 					//Caps maximum fall speed, so when falling over large distances we don't accelerate to insanely high speeds
 					RB.linearVelocity = new Vector2(RB.linearVelocity.x,
-						Mathf.Max(RB.linearVelocity.y, -Data.maxFastFallSpeed));
+						Mathf.Max(RB.linearVelocity.y, -movementSettings.maxFastFallSpeed));
 				}
 				else if (_isJumpCut) {
 					//Higher gravity if jump button released
-					SetGravityScale(Data.gravityScale * Data.jumpCutGravityMult);
+					SetGravityScale(movementSettings.gravityScale * movementSettings.jumpCutGravityMult);
 					RB.linearVelocity = new Vector2(RB.linearVelocity.x,
-						Mathf.Max(RB.linearVelocity.y, -Data.maxFallSpeed));
+						Mathf.Max(RB.linearVelocity.y, -movementSettings.maxFallSpeed));
 				}
 				else if ((IsJumping || IsWallJumping || _isJumpFalling) &&
-				         Mathf.Abs(RB.linearVelocity.y) < Data.jumpHangTimeThreshold) {
-					SetGravityScale(Data.gravityScale * Data.jumpHangGravityMult);
+				         Mathf.Abs(RB.linearVelocity.y) < movementSettings.jumpHangTimeThreshold) {
+					SetGravityScale(movementSettings.gravityScale * movementSettings.jumpHangGravityMult);
 				}
 				else if (RB.linearVelocity.y < 0) {
 					//Higher gravity if falling
-					SetGravityScale(Data.gravityScale * Data.fallGravityMult);
+					SetGravityScale(movementSettings.gravityScale * movementSettings.fallGravityMult);
 					//Caps maximum fall speed, so when falling over large distances we don't accelerate to insanely high speeds
 					RB.linearVelocity = new Vector2(RB.linearVelocity.x,
-						Mathf.Max(RB.linearVelocity.y, -Data.maxFallSpeed));
+						Mathf.Max(RB.linearVelocity.y, -movementSettings.maxFallSpeed));
 				}
 				else {
 					//Default gravity if standing on a platform or moving upwards
-					SetGravityScale(Data.gravityScale);
+					SetGravityScale(movementSettings.gravityScale);
 				}
 			}
 			else {
@@ -295,23 +295,23 @@ namespace Darkness.Runtime.Gameplay.Player {
 			//Handle Run
 			if (!IsDashing && !IsSliding) {
 				if (IsWallJumping) {
-					Run(Data.wallJumpRunLerp);
+					Run(movementSettings.wallJumpRunLerp);
 				}
 				else if (!IsSitting) {
 					Run(1);
 				}
 			}
 			else if (_isDashAttacking) {
-				Run(Data.dashEndRunLerp);
+				Run(movementSettings.dashEndRunLerp);
 			}
 			else if (_isSlideAttacking) {
-				Run(Data.slideEndRunLerp);
+				Run(movementSettings.slideEndRunLerp);
 			}
 		}
 
 		//Methods which whandle input detected in Update()
 		private void OnJumpInput() {
-			LastPressedJumpTime = Data.jumpInputBufferTime;
+			LastPressedJumpTime = movementSettings.jumpInputBufferTime;
 		}
 
 		private void OnJumpUpInput() {
@@ -320,11 +320,11 @@ namespace Darkness.Runtime.Gameplay.Player {
 		}
 
 		private void OnDashInput() {
-			LastPressedDashTime = Data.dashInputBufferTime;
+			LastPressedDashTime = movementSettings.dashInputBufferTime;
 		}
 
 		private void OnSlideInput() {
-			LastPressedSlideTime = Data.slideInputBufferTime;
+			LastPressedSlideTime = movementSettings.slideInputBufferTime;
 		}
 
 		private void SetGravityScale(float scale) {
@@ -349,7 +349,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 
 		private void Run(float lerpAmount) {
 			//Calculate the direction we want to move in and our desired velocity
-			float targetSpeed = _moveInput.x * Data.runMaxSpeed;
+			float targetSpeed = _moveInput.x * movementSettings.runMaxSpeed;
 			//We can reduce are control using Lerp() this smooths changes to are direction and speed
 			targetSpeed = Mathf.Lerp(RB.linearVelocityX, targetSpeed, lerpAmount);
 
@@ -360,11 +360,11 @@ namespace Darkness.Runtime.Gameplay.Player {
 			//Gets an acceleration value based on if we are accelerating (includes turning) 
 			//or trying to decelerate (stop). As well as applying a multiplier if we're air borne.
 			if (LastOnGroundTime > 0)
-				accelRate = (Mathf.Abs(targetSpeed) > 0.01f) ? Data.runAccelAmount : Data.runDeccelAmount;
+				accelRate = (Mathf.Abs(targetSpeed) > 0.01f) ? movementSettings.runAccelAmount : movementSettings.runDeccelAmount;
 			else
 				accelRate = (Mathf.Abs(targetSpeed) > 0.01f)
-					? Data.runAccelAmount * Data.accelInAir
-					: Data.runDeccelAmount * Data.deccelInAir;
+					? movementSettings.runAccelAmount * movementSettings.accelInAir
+					: movementSettings.runDeccelAmount * movementSettings.deccelInAir;
 
 			#endregion
 
@@ -372,9 +372,9 @@ namespace Darkness.Runtime.Gameplay.Player {
 
 			//Increase are acceleration and maxSpeed when at the apex of their jump, makes the jump feel a bit more bouncy, responsive and natural
 			if ((IsJumping || IsWallJumping || _isJumpFalling) &&
-			    Mathf.Abs(RB.linearVelocity.y) < Data.jumpHangTimeThreshold) {
-				accelRate *= Data.jumpHangAccelerationMult;
-				targetSpeed *= Data.jumpHangMaxSpeedMult;
+			    Mathf.Abs(RB.linearVelocity.y) < movementSettings.jumpHangTimeThreshold) {
+				accelRate *= movementSettings.jumpHangAccelerationMult;
+				targetSpeed *= movementSettings.jumpHangMaxSpeedMult;
 			}
 
 			#endregion
@@ -382,7 +382,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 			#region Conserve Momentum
 
 			//We won't slow the player down if they are moving in their desired direction but at a greater speed than their maxSpeed
-			if (Data.doConserveMomentum && Mathf.Abs(RB.linearVelocityX) > Mathf.Abs(targetSpeed) &&
+			if (movementSettings.doConserveMomentum && Mathf.Abs(RB.linearVelocityX) > Mathf.Abs(targetSpeed) &&
 			    Mathf.Approximately(Mathf.Sign(RB.linearVelocityX), Mathf.Sign(targetSpeed)) && 
 			    Mathf.Abs(targetSpeed) > 0.01f &&
 			    LastOnGroundTime < 0) {
@@ -416,7 +416,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 			//We increase the force applied if we are falling
 			//This means we'll always feel like we jump the same amount 
 			//(setting the player's Y velocity to 0 beforehand will likely work the same, but I find this more elegant :D)
-			float force = Data.jumpForce;
+			float force = movementSettings.jumpForce;
 			if (RB.linearVelocity.y < 0)
 				force -= RB.linearVelocity.y;
 
@@ -432,7 +432,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 
 			#region Perform Wall Jump
 
-			Vector2 force = new Vector2(Data.wallJumpForce.x, Data.wallJumpForce.y);
+			Vector2 force = new Vector2(movementSettings.wallJumpForce.x, movementSettings.wallJumpForce.y);
 			force.x *= dir; //apply force in opposite direction of wall
 
 			if (!Mathf.Approximately(Mathf.Sign(RB.linearVelocity.x), Mathf.Sign(force.x)))
@@ -465,8 +465,8 @@ namespace Darkness.Runtime.Gameplay.Player {
 			//SetGravityScale(0);
 
 			//We keep the player's velocity at the dash speed during the "attack" phase (in celeste the first 0.15s)
-			while (Time.time - startTime <= Data.dashAttackTime) {
-				RB.linearVelocity = dir.normalized * Data.dashSpeed;
+			while (Time.time - startTime <= movementSettings.dashAttackTime) {
+				RB.linearVelocity = dir.normalized * movementSettings.dashSpeed;
 				//Pauses the loop until the next frame, creating something of a Update loop. 
 				//This is a cleaner implementation opposed to multiple timers and this coroutine approach is actually what is used in Celeste :D
 				yield return null;
@@ -478,9 +478,9 @@ namespace Darkness.Runtime.Gameplay.Player {
 
 			//Begins the "end" of our dash where we return some control to the player but still limit run acceleration (see Update() and Run())
 			//SetGravityScale(Data.gravityScale);
-			RB.linearVelocity = Data.dashEndSpeed * dir.normalized;
+			RB.linearVelocity = movementSettings.dashEndSpeed * dir.normalized;
 
-			while (Time.time - startTime <= Data.dashEndTime) {
+			while (Time.time - startTime <= movementSettings.dashEndTime) {
 				yield return null;
 			}
 
@@ -492,9 +492,9 @@ namespace Darkness.Runtime.Gameplay.Player {
 		private IEnumerator RefillDash(int amount) {
 			//SHoet cooldown, so we can't constantly dash along the ground, again this is the implementation in Celeste, feel free to change it up
 			_dashRefilling = true;
-			yield return new WaitForSeconds(Data.dashRefillTime);
+			yield return new WaitForSeconds(movementSettings.dashRefillTime);
 			_dashRefilling = false;
-			_dashesLeft = Mathf.Min(Data.dashAmount, _dashesLeft + 1);
+			_dashesLeft = Mathf.Min(movementSettings.dashAmount, _dashesLeft + 1);
 		}
 
 		private IEnumerator StartSlide(Vector2 dir) {
@@ -502,8 +502,8 @@ namespace Darkness.Runtime.Gameplay.Player {
 			float startTime = Time.time;
 			_isSlideAttacking = true;
 			//We keep the player's velocity at the dash speed during the "attack" phase (in celeste the first 0.15s)
-			while (Time.time - startTime <= Data.slideTime) {
-				RB.linearVelocity = dir.normalized * Data.slideSpeed;
+			while (Time.time - startTime <= movementSettings.slideTime) {
+				RB.linearVelocity = dir.normalized * movementSettings.slideSpeed;
 				//Pauses the loop until the next frame, creating something of a Update loop. 
 				//This is a cleaner implementation opposed to multiple timers and this coroutine approach is actually what is used in Celeste :D
 				yield return null;
@@ -514,9 +514,9 @@ namespace Darkness.Runtime.Gameplay.Player {
 
 			//Begins the "end" of our dash where we return some control to the player but still limit run acceleration (see Update() and Run())
 			//SetGravityScale(Data.gravityScale);
-			RB.linearVelocity = Data.slideEndSpeed * dir.normalized;
+			RB.linearVelocity = movementSettings.slideEndSpeed * dir.normalized;
 
-			while (Time.time - startTime <= Data.slideEndTime) {
+			while (Time.time - startTime <= movementSettings.slideEndTime) {
 				yield return null;
 			}
 
@@ -547,7 +547,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 		}
 
 		private bool CanDash() {
-			if (!IsDashing && !IsSliding && _dashesLeft < Data.dashAmount && LastOnGroundTime > 0 && !_dashRefilling) {
+			if (!IsDashing && !IsSliding && _dashesLeft < movementSettings.dashAmount && LastOnGroundTime > 0 && !_dashRefilling) {
 				StartCoroutine(nameof(RefillDash), 1);
 			}
 

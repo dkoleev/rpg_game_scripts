@@ -7,17 +7,17 @@ using VContainer;
 
 namespace Darkness.Runtime.Gameplay.Levels {
     public class LevelsManager {
-        private readonly LevelsListData _levelsListData;
+        private readonly LevelsList _levelsList;
         private readonly AddressableLoader _addressableLoader;
 
         [Inject]
-        public LevelsManager(LevelsListData levelsListData, AddressableLoader addressableLoader) {
-            _levelsListData = levelsListData;
+        public LevelsManager(LevelsList levelsList, AddressableLoader addressableLoader) {
+            _levelsList = levelsList;
             _addressableLoader = addressableLoader;
         }
 
         public async UniTask<SceneInstance> LoadLevel(LevelType levelType, bool activateOnLoad = true ) {
-            var sceneInstance = await _addressableLoader.LoadScene(_levelsListData.levels[levelType], LoadSceneMode.Additive, activateOnLoad);
+            var sceneInstance = await _addressableLoader.LoadScene(_levelsList.levels[levelType], LoadSceneMode.Additive, activateOnLoad);
             return sceneInstance;
         }
         

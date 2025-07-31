@@ -5,7 +5,7 @@ using UnityEngine.AddressableAssets;
 
 namespace Darkness.Runtime.ScriptableObjects {
     [CreateAssetMenu(fileName = "LevelsListData", menuName = "Game/Levels List Data")]
-    public class LevelsListData : ScriptableObject {
+    public class LevelsList : ScriptableObject {
         public SerializedDictionary<LevelType, AssetReference> levels;
     }
 }

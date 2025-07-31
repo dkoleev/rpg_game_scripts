@@ -8,21 +8,22 @@ using Darkness.Runtime.ScriptableObjects;
 using Darkness.Runtime.Utils.Resource;
 using MessagePipe;
 using UnityEngine;
+using UnityEngine.Serialization;
 using VContainer;
 using VContainer.Unity;
 
 namespace Darkness.Runtime {
     public class GameLifeTimeScope : LifetimeScope {
-        [SerializeField] private LevelsListData levelsListData;
-        [SerializeField] private CharactersListData charactersListData;
+        [SerializeField] private LevelsList levelsList;
+        [SerializeField] private CharactersList charactersList;
         
         protected override void Configure(IContainerBuilder builder) {
             // RegisterMessagePipe(builder);
 
             // builder.RegisterInstance(gameSettings.PlayerSettings);
             // builder.RegisterInstance(gameSettings.CharactersViewRef);
-            builder.RegisterInstance(levelsListData);
-            builder.RegisterInstance(charactersListData);
+            builder.RegisterInstance(levelsList);
+            builder.RegisterInstance(charactersList);
             
             builder.Register<GameLogger>(Lifetime.Singleton);
             builder.Register<AddressableLoader>(Lifetime.Singleton);

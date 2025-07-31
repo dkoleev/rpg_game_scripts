@@ -44,15 +44,18 @@ namespace Darkness.Runtime {
             LoadPlayerState();
 
             var startScene = SceneManager.GetActiveScene();
-            var bootScene = await _levelsManager.LoadLevel(LevelType.Boot);
+            var bootScene = SceneManager.CreateScene("BootTemp");
             await SceneManager.UnloadSceneAsync(startScene);
+            // var bootScene = await _levelsManager.LoadLevel(LevelType.Boot);
+            // await SceneManager.UnloadSceneAsync(startScene);
+            await _levelsManager.LoadLevel(LevelType.Camera);
             await _levelsManager.LoadLevel(LevelType.Tutorial);
-            _levelsManager.UnloadLevel(bootScene);
+            SceneManager.UnloadSceneAsync(bootScene);
 
             var player = await SpawnPlayer();
             var cameraTarget = GameObject.FindGameObjectWithTag("CameraTarget").GetComponent<CameraTarget>();
             cameraTarget.SetTarget(player.transform);
-            SetCameraInstantlyToPosition(cameraTarget.transform);
+            SetCameraInstantlyToPosition(cameraTarget.Target);
         }
 
         private async UniTask<GameObject> SpawnPlayer() {
@@ -112,6 +115,7 @@ namespace Darkness.Runtime {
                 liveCam = brain.ActiveVirtualCamera as CinemachineCamera;
 
             liveCam.ForceCameraPosition(targetTransform.position, Quaternion.identity);
+            liveCam.Follow = targetTransform;
         }
 
         private void InitializeCamera(Transform targetTransform) {

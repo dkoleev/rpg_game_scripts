@@ -2,6 +2,7 @@
 
 namespace Darkness.Runtime.Gameplay {
     public class CameraTarget : MonoBehaviour {
+        public Transform Target => _target;
         private Transform _target;
         
         public void SetTarget(Transform target) {
