@@ -1,4 +1,5 @@
 ﻿using System;
+using Darkness.Runtime.DebTools;
 using Darkness.Runtime.Experimental;
 using Darkness.Runtime.Gameplay;
 using Darkness.Runtime.Gameplay.Levels;
@@ -36,6 +37,10 @@ namespace Darkness.Runtime {
             builder.RegisterEntryPoint<InputHandler>();
             builder.RegisterEntryPoint<Boot>();
             
+            //----DEBUG-----
+            builder.Register<DebugHotKeys>(Lifetime.Singleton).AsImplementedInterfaces();
+            //-------------
+
             // builder.Register<EntityViewManager>(Lifetime.Singleton);
             // builder.RegisterSystemFromDefaultWorld<EntityViewSyncSystem>();
         }

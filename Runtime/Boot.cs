@@ -54,6 +54,7 @@ namespace Darkness.Runtime {
             // await SceneManager.UnloadSceneAsync(startScene);
             await _levelsManager.LoadLevel(LevelType.Camera);
             await _levelsManager.LoadLevel(LevelType.Tutorial);
+            await _levelsManager.LoadLevel(LevelType.Debug);
             SceneManager.UnloadSceneAsync(bootScene);
 
             var player = await SpawnPlayer();

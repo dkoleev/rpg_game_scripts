@@ -2,6 +2,7 @@
     public enum LevelType {
         Tutorial,
         Boot,
-        Camera
+        Camera,
+        Debug
     }
 }

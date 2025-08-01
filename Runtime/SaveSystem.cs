@@ -1,16 +1,19 @@
 ﻿using System.IO;
 using Cysharp.Threading.Tasks;
+using Darkness.Runtime.Log;
 using Darkness.Runtime.State;
 using UnityEngine;
 
 namespace Darkness.Runtime {
     public class SaveSystem {
+        private readonly GameLogger _gameLogger;
         public GameState Current { get; private set; }
         private readonly string _savePath;
 
         private bool _progressWasLoaded;
 
-        public SaveSystem() {
+        public SaveSystem(GameLogger gameLogger) {
+            _gameLogger = gameLogger;
             Current = new GameState();
             _savePath = Path.Combine(Application.persistentDataPath, "progress.json");
         }
@@ -22,11 +25,13 @@ namespace Darkness.Runtime {
             
             string json = JsonUtility.ToJson(Current, true); // true = prettyPrint
             File.WriteAllText(_savePath, json);
+            _gameLogger.Log("Game saved successufully");
         }
 
         public void Load() {
             if (!File.Exists(_savePath)) {
                 Current = new GameState();
+                _progressWasLoaded = true;
                 return;
             }
 
@@ -42,11 +47,13 @@ namespace Darkness.Runtime {
             
             var json = JsonUtility.ToJson(Current, true);
             await UniTask.RunOnThreadPool(() => { File.WriteAllText(_savePath, json); });
+            _gameLogger.Log("Game saved successufully");
         }
 
         public async UniTask LoadAsync() {
             if (!File.Exists(_savePath)) {
                 Current = new GameState();
+                _progressWasLoaded = true;
                 return;
             }
 
