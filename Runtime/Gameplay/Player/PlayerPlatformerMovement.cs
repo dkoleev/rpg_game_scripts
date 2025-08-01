@@ -85,6 +85,8 @@ namespace Darkness.Runtime.Gameplay.Player {
 		}
 		
 		private void Awake() {
+			var gm = FindAnyObjectByType<GameManager>();
+			_playerState = gm.SaveSystem.Current.player;
 			RB = GetComponent<Rigidbody2D>();
 			AnimHandler = GetComponent<PlayerAnimator>();
 			_playerInput = GetComponent<PlayerInput>();

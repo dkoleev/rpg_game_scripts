@@ -28,7 +28,7 @@ namespace Editor {
         }
 
         [MenuItem("Tools/Danger/Delete progress")]
-        public void DeleteProgress() {
+        public static void DeleteProgress() {
             string path = Path.Combine(Application.persistentDataPath, "progress.json");
 
             if (File.Exists(path)) {

@@ -18,6 +18,8 @@ namespace Darkness.Runtime {
     public class GameLifeTimeScope : LifetimeScope {
         [SerializeField] private LevelsList levelsList;
         [SerializeField] private CharactersList charactersList;
+        [Space]
+        [SerializeField] private GameManager gameManager;
         
         protected override void Configure(IContainerBuilder builder) {
             // RegisterMessagePipe(builder);
@@ -26,6 +28,8 @@ namespace Darkness.Runtime {
             // builder.RegisterInstance(gameSettings.CharactersViewRef);
             builder.RegisterInstance(levelsList);
             builder.RegisterInstance(charactersList);
+            
+            builder.RegisterComponent(gameManager);
             
             builder.Register<GameLogger>(Lifetime.Singleton);
             builder.Register<AddressableLoader>(Lifetime.Singleton);
@@ -37,10 +41,9 @@ namespace Darkness.Runtime {
             builder.RegisterEntryPoint<InputHandler>();
             builder.RegisterEntryPoint<Boot>();
             
-            //----DEBUG-----
+#if DEBUG
             builder.Register<DebugHotKeys>(Lifetime.Singleton).AsImplementedInterfaces();
-            //-------------
-
+#endif
             // builder.Register<EntityViewManager>(Lifetime.Singleton);
             // builder.RegisterSystemFromDefaultWorld<EntityViewSyncSystem>();
         }

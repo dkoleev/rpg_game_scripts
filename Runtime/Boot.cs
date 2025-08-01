@@ -47,15 +47,13 @@ namespace Darkness.Runtime {
             LoadGameData();
             LoadPlayerState();
 
-            var startScene = SceneManager.GetActiveScene();
-            var bootScene = SceneManager.CreateScene("BootTemp");
-            await SceneManager.UnloadSceneAsync(startScene);
+            // var startScene = SceneManager.GetActiveScene();
+            // var bootScene = SceneManager.CreateScene("BootTemp");
             // var bootScene = await _levelsManager.LoadLevel(LevelType.Boot);
             // await SceneManager.UnloadSceneAsync(startScene);
             await _levelsManager.LoadLevel(LevelType.Camera);
             await _levelsManager.LoadLevel(LevelType.Tutorial);
             await _levelsManager.LoadLevel(LevelType.Debug);
-            SceneManager.UnloadSceneAsync(bootScene);
 
             var player = await SpawnPlayer();
             var cameraTarget = GameObject.FindGameObjectWithTag("CameraTarget").GetComponent<CameraTarget>();
@@ -66,9 +64,6 @@ namespace Darkness.Runtime {
         private async UniTask<GameObject> SpawnPlayer() {
             var spawnPoint = GameObject.FindGameObjectWithTag("SpawnPoint");
             var playerGo = await _spawnManager.SpawnCharacter(CharacterType.Player, spawnPoint.transform.position);
-            var playerMovement = playerGo.GetComponent<PlayerPlatformerMovement>();
-            playerMovement.Init(_saveSystem);
-            
             return playerGo;
         }
         
