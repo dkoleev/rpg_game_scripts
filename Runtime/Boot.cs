@@ -12,7 +12,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using VContainer;
 using VContainer.Unity;
-using CameraTarget = Darkness.Runtime.Gameplay.CameraTarget;
+using CameraTarget = Darkness.Runtime.Gameplay.Camera.CameraTarget;
 
 namespace Darkness.Runtime {
     public class Boot : IStartable, IDisposable {
@@ -47,11 +47,6 @@ namespace Darkness.Runtime {
             LoadGameData();
             LoadPlayerState();
 
-            var startScene = SceneManager.GetActiveScene();
-            var bootTempScene = SceneManager.CreateScene("BootTemp");
-            await SceneManager.UnloadSceneAsync(startScene);
-            var bootScene = await _levelsManager.LoadLevel(LevelType.Boot);
-            SceneManager.UnloadSceneAsync(bootTempScene);
             // await SceneManager.UnloadSceneAsync(startScene);
             await _levelsManager.LoadLevel(LevelType.Camera);
             await _levelsManager.LoadLevel(LevelType.Tutorial);
@@ -60,7 +55,7 @@ namespace Darkness.Runtime {
             var player = await SpawnPlayer();
             var cameraTarget = GameObject.FindGameObjectWithTag("CameraTarget").GetComponent<CameraTarget>();
             cameraTarget.SetTarget(player.transform);
-            SetCameraInstantlyToPosition(cameraTarget.Target);
+            SetCameraInstantlyToPosition(cameraTarget.transform);
         }
 
         private async UniTask<GameObject> SpawnPlayer() {

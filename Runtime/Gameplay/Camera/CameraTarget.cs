@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Darkness.Runtime.Gameplay {
+namespace Darkness.Runtime.Gameplay.Camera {
     public class CameraTarget : MonoBehaviour {
         public Transform Target => _target;
         private Transform _target;
@@ -15,6 +15,7 @@ namespace Darkness.Runtime.Gameplay {
             }
             
             transform.position = _target.position;
+            transform.rotation = _target.rotation;
         }
     }
 }

@@ -28,6 +28,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 		public bool IsDashing { get; private set; }
 		public bool IsSliding { get; private set; }
 		public bool IsSitting { get; private set; }
+		public bool IsJumpfalling => _isJumpFalling;
 
 		//Timers (also all fields, could be private and a method returning a bool could be used)
 		public float LastOnGroundTime { get; private set; }
