@@ -24,7 +24,7 @@ namespace Darkness.Runtime {
             {
                 while (!token.IsCancellationRequested)
                 {
-                    await UniTask.Delay(TimeSpan.FromSeconds(5), cancellationToken: token);
+                    await UniTask.Delay(TimeSpan.FromSeconds(30), cancellationToken: token);
                     await _progress.SaveAsync();
                 }
             }
