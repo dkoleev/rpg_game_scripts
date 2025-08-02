@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace Darkness.Runtime.Gameplay.Player {
-	public class PlayerPlatformerMovement : MonoBehaviour {
+	public class PlayerPlatformerMovement : MonoBehaviourExt {
 		//Scriptable object which holds all the player's movement parameters. If you don't want to use it
 		//just paste in all the parameters, though you will need to manuly change all references in this script
 		public PlayerMovementSettings movementSettings;
@@ -14,7 +14,6 @@ namespace Darkness.Runtime.Gameplay.Player {
 
 		//Script to handle all player animations, all references can be safely removed if you're importing into your own project.
 		public PlayerAnimator AnimHandler { get; private set; }
-
 
 		//Variables control the various actions the player can perform at any time.
 		//These are fields which can are public allowing for other sctipts to read them
@@ -80,13 +79,9 @@ namespace Darkness.Runtime.Gameplay.Player {
 
 		private PlayerState _playerState;
 		
-		public void Init(SaveSystem saveSystem) {
-			_playerState = saveSystem.Current.player;
-		}
-		
-		private void Awake() {
-			var gm = FindAnyObjectByType<GameManager>();
-			_playerState = gm.SaveSystem.Current.player;
+		protected override void Awake() {
+			base.Awake();
+			_playerState = GameManager.SaveSystem.Current.player;
 			RB = GetComponent<Rigidbody2D>();
 			AnimHandler = GetComponent<PlayerAnimator>();
 			_playerInput = GetComponent<PlayerInput>();

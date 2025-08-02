@@ -47,9 +47,11 @@ namespace Darkness.Runtime {
             LoadGameData();
             LoadPlayerState();
 
-            // var startScene = SceneManager.GetActiveScene();
-            // var bootScene = SceneManager.CreateScene("BootTemp");
-            // var bootScene = await _levelsManager.LoadLevel(LevelType.Boot);
+            var startScene = SceneManager.GetActiveScene();
+            var bootTempScene = SceneManager.CreateScene("BootTemp");
+            await SceneManager.UnloadSceneAsync(startScene);
+            var bootScene = await _levelsManager.LoadLevel(LevelType.Boot);
+            SceneManager.UnloadSceneAsync(bootTempScene);
             // await SceneManager.UnloadSceneAsync(startScene);
             await _levelsManager.LoadLevel(LevelType.Camera);
             await _levelsManager.LoadLevel(LevelType.Tutorial);
