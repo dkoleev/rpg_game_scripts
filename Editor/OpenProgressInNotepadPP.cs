@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Editor {
     public class OpenProgressInNotepadPP {
-        [MenuItem("Tools/Open Save JSON in Notepad++")]
+        [MenuItem("Game/Open Save JSON in Notepad++")]
         public static void OpenProgressFile() {
             // Path to saved file
             string jsonPath = Path.Combine(Application.persistentDataPath, "progress.json");
@@ -27,7 +27,7 @@ namespace Editor {
             Process.Start(notepadPPPath, $"\"{jsonPath}\"");
         }
 
-        [MenuItem("Tools/Danger/Delete progress")]
+        [MenuItem("Game/Danger/Delete progress")]
         public static void DeleteProgress() {
             string path = Path.Combine(Application.persistentDataPath, "progress.json");
 

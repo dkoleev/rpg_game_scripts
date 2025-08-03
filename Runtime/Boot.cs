@@ -5,6 +5,7 @@ using Darkness.Runtime.Gameplay;
 using Darkness.Runtime.Gameplay.Levels;
 using Darkness.Runtime.Gameplay.Player;
 using Darkness.Runtime.Log;
+using Darkness.Runtime.ScriptableObjects;
 using Darkness.Runtime.Utils.Resource;
 using DG.Tweening;
 using Unity.Cinemachine;
@@ -20,6 +21,7 @@ namespace Darkness.Runtime {
         private readonly AddressableLoader _addressableLoader;
         private readonly LevelsManager _levelsManager;
         private readonly SpawnManager _spawnManager;
+        private readonly BootSettings _bootSettings;
         private readonly SaveSystem _saveSystem;
 
         [Inject]
@@ -28,12 +30,14 @@ namespace Darkness.Runtime {
             AddressableLoader addressableLoader, 
             LevelsManager levelsManager,
             SpawnManager spawnManager,
+            BootSettings bootSettings,
             SaveSystem saveSystem
             ) {
             _gameLogger = gameLogger;
             _addressableLoader = addressableLoader;
             _levelsManager = levelsManager;
             _spawnManager = spawnManager;
+            _bootSettings = bootSettings;
             _saveSystem = saveSystem;
         }
 
@@ -47,10 +51,18 @@ namespace Darkness.Runtime {
             LoadGameData();
             LoadPlayerState();
 
+            foreach (var levelType in _bootSettings.DefaultScenes) {
+                await _levelsManager.LoadLevel(levelType);
+            }
+
+            foreach (var sceneAsset in _bootSettings.AdditionalScenesToLoad) {
+                await _levelsManager.LoadLevel(sceneAsset);
+            }
+
             // await SceneManager.UnloadSceneAsync(startScene);
-            await _levelsManager.LoadLevel(LevelType.Camera);
-            await _levelsManager.LoadLevel(LevelType.Tutorial);
-            await _levelsManager.LoadLevel(LevelType.Debug);
+            // await _levelsManager.LoadLevel(LevelType.Camera);
+            // await _levelsManager.LoadLevel(LevelType.Tutorial);
+            // await _levelsManager.LoadLevel(LevelType.Debug);
 
             var player = await SpawnPlayer();
             var cameraTarget = GameObject.FindGameObjectWithTag("CameraTarget").GetComponent<CameraTarget>();

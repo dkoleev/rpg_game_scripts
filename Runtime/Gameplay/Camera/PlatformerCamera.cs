@@ -12,7 +12,17 @@ namespace Darkness.Runtime.Gameplay.Camera {
         [ChildCameraProperty] public CinemachineVirtualCameraBase defaultCamera;
         [ChildCameraProperty] public CinemachineVirtualCameraBase fallCamera;
 
+        private CinemachineConfiner2D _confiner;
         private PlayerPlatformerMovement _platformerMovement;
+
+        private void Awake() {
+            _confiner = GetComponent<CinemachineConfiner2D>();
+        }
+
+        public void SetBounds(Collider2D bounds) {
+            _confiner.InvalidateBoundingShapeCache();
+            _confiner.BoundingShape2D = bounds;
+        }
 
         protected override CinemachineVirtualCameraBase ChooseCurrentCamera(Vector3 worldUp, float deltaTime) {
             SetupPlayer();

@@ -16,6 +16,7 @@ using VContainer.Unity;
 
 namespace Darkness.Runtime {
     public class GameLifeTimeScope : LifetimeScope {
+        [SerializeField] private BootSettings bootSettings;
         [SerializeField] private LevelsList levelsList;
         [SerializeField] private CharactersList charactersList;
         [Space]
@@ -28,6 +29,7 @@ namespace Darkness.Runtime {
             // builder.RegisterInstance(gameSettings.CharactersViewRef);
             builder.RegisterInstance(levelsList);
             builder.RegisterInstance(charactersList);
+            builder.RegisterInstance(bootSettings);
             
             builder.RegisterComponent(gameManager);
             
