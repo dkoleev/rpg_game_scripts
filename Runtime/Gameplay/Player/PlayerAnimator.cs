@@ -98,7 +98,7 @@ namespace Darkness.Runtime.Gameplay.Player {
                 return;
             }
             _isSitting = isSitting;
-            _anim.CrossFadeInFixedTime(isSitting ? "ToSit" : "FromSit", 0f);
+            _anim.CrossFadeInFixedTime(isSitting ? "ToSit" : "FromSit", 0f); //Play instead CrossFadeInFixedTime?
         }
     }
 }

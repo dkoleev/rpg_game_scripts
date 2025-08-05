@@ -12,6 +12,9 @@ namespace Darkness.Runtime.Gameplay.Player {
             Sit
         }
 
+        [SerializeField] private PlayerAttack mainAttackComponent;
+        [SerializeField] private PlayerAttack slowAttackComponent;
+
         public event Action<AttackType> OnPerformAttack;
         public event Action<bool> OnBlocking;
         public bool IsBlocking { get; private set; }
@@ -19,12 +22,6 @@ namespace Darkness.Runtime.Gameplay.Player {
 
         private ISubscriber<InputMessage> _inputSubscriber;
         private IDisposable _disposable;
-        private PlayerAttack _playerAttack;
-
-        private void Awake() {
-            _playerAttack = GetComponentInChildren<PlayerAttack>();
-            _playerAttack.SetActive(false);
-        }
 
         private void Start() {
             SetupSubscribers();
@@ -46,7 +43,7 @@ namespace Darkness.Runtime.Gameplay.Player {
                     if (data.Phase == InputMessage.InputPhase.Performed) {
                         OnPerformAttack?.Invoke(data.IsSlowAttack ? AttackType.Slow : AttackType.Default);
                         AttackInProgress = true;
-                        FinishAttack().Forget();
+                        FinishAttack(data.IsSlowAttack).Forget();
                     }
                     break;
                 case InputMessage.InputType.Roll:
@@ -73,13 +70,23 @@ namespace Darkness.Runtime.Gameplay.Player {
             }
         }
 
-        private async UniTaskVoid FinishAttack() {
-            await UniTask.Delay(TimeSpan.FromSeconds(0.300f));
-            _playerAttack.SetActive(true);
-            await UniTask.Delay(TimeSpan.FromSeconds(0.180f));
-            _playerAttack.SetActive(false);
-            await UniTask.Delay(TimeSpan.FromSeconds(0.240f));
-            AttackInProgress = false;
+        private async UniTaskVoid FinishAttack(bool isSlow) {
+            if (isSlow) {
+                await UniTask.Delay(TimeSpan.FromSeconds(0.360f));
+                slowAttackComponent.SetActive(true);
+                await UniTask.Delay(TimeSpan.FromSeconds(0.120f));
+                slowAttackComponent.SetActive(false);
+                await UniTask.Delay(TimeSpan.FromSeconds(0.60f));
+                AttackInProgress = false;
+            }
+            else {
+                await UniTask.Delay(TimeSpan.FromSeconds(0.300f));
+                mainAttackComponent.SetActive(true);
+                await UniTask.Delay(TimeSpan.FromSeconds(0.180f));
+                mainAttackComponent.SetActive(false);
+                await UniTask.Delay(TimeSpan.FromSeconds(0.240f));
+                AttackInProgress = false;
+            }
         }
 
         public void OnDestroy() {
