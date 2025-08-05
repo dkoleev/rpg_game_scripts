@@ -23,7 +23,6 @@ namespace Darkness.Runtime.Gameplay {
             
             _playerInput.Player.Attack.started += AttackStarted;
             _playerInput.Player.Attack.performed += AttackPerformed;
-            _playerInput.Player.Attack.canceled += AttackCancelled;
             
             _playerInput.Player.Block.started += BlockStarted;
             _playerInput.Player.Block.performed += BlockPerformed;
@@ -37,7 +36,6 @@ namespace Darkness.Runtime.Gameplay {
             _playerInput.Player.Move.canceled -= MoveCanceled;
             _playerInput.Player.Attack.started -= AttackStarted;
             _playerInput.Player.Attack.performed -= AttackPerformed;
-            _playerInput.Player.Attack.canceled -= AttackCancelled;
             
             _playerInput.Player.Roll.performed -= RollPerformed;
             
@@ -64,9 +62,6 @@ namespace Darkness.Runtime.Gameplay {
                     Phase = InputMessage.InputPhase.Performed,
                     IsSlowAttack = false
                 });
-        }
-        
-        private void AttackCancelled(InputAction.CallbackContext context) {
         }
 
         private void MoveCanceled(InputAction.CallbackContext obj) {

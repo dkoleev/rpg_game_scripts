@@ -1,4 +1,5 @@
 ﻿using System;
+using Cysharp.Threading.Tasks;
 using Darkness.Runtime.Messages;
 using MessagePipe;
 using UnityEngine;
@@ -10,14 +11,21 @@ namespace Darkness.Runtime.Gameplay.Player {
             Slow,
             Sit
         }
-        
+
         public event Action<AttackType> OnPerformAttack;
         public event Action<bool> OnBlocking;
         public bool IsBlocking { get; private set; }
+        public bool AttackInProgress { get; private set; }
 
         private ISubscriber<InputMessage> _inputSubscriber;
         private IDisposable _disposable;
-        
+        private PlayerAttack _playerAttack;
+
+        private void Awake() {
+            _playerAttack = GetComponentInChildren<PlayerAttack>();
+            _playerAttack.SetActive(false);
+        }
+
         private void Start() {
             SetupSubscribers();
         }
@@ -32,8 +40,13 @@ namespace Darkness.Runtime.Gameplay.Player {
         private void OnInput(InputMessage data) {
             switch (data.Type) {
                 case InputMessage.InputType.Attack:
+                    if (AttackInProgress) {
+                        return;
+                    }
                     if (data.Phase == InputMessage.InputPhase.Performed) {
                         OnPerformAttack?.Invoke(data.IsSlowAttack ? AttackType.Slow : AttackType.Default);
+                        AttackInProgress = true;
+                        FinishAttack().Forget();
                     }
                     break;
                 case InputMessage.InputType.Roll:
@@ -53,10 +66,20 @@ namespace Darkness.Runtime.Gameplay.Player {
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
+
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        private async UniTaskVoid FinishAttack() {
+            await UniTask.Delay(TimeSpan.FromSeconds(0.300f));
+            _playerAttack.SetActive(true);
+            await UniTask.Delay(TimeSpan.FromSeconds(0.180f));
+            _playerAttack.SetActive(false);
+            await UniTask.Delay(TimeSpan.FromSeconds(0.240f));
+            AttackInProgress = false;
         }
 
         public void OnDestroy() {
