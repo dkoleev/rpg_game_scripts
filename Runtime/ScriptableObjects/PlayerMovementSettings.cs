@@ -1,9 +1,12 @@
 ﻿using UnityEngine;
 
 namespace Darkness.Runtime.ScriptableObjects {
-	[CreateAssetMenu(menuName =
-		"Game/Player Data")] //Create a new playerData object by right clicking in the Project Menu then Create/Player/Player Data and drag onto the player
+	[CreateAssetMenu(fileName = "PlayerMovementSettings", menuName =
+		"Game/Player Movement Settings")] //Create a new playerData object by right clicking in the Project Menu then Create/Player/Player Data and drag onto the player
 	public class PlayerMovementSettings : ScriptableObject {
+		[Header("Layers & Tags")] [SerializeField]
+		public LayerMask groundLayer;
+
 		[Header("Gravity")] [HideInInspector]
 		public float gravityStrength; //Downwards force (gravity) needed for the desired jumpHeight and jumpTimeToApex.
 
@@ -40,7 +43,6 @@ namespace Darkness.Runtime.ScriptableObjects {
 		[Space(5)] [Range(0f, 1)] public float accelInAir; //Multipliers applied to acceleration rate when airborne.
 		[Range(0f, 1)] public float deccelInAir;
 		[Space(5)] public bool doConserveMomentum = true;
-
 		[Space(20)] [Header("Jump")] public float jumpHeight; //Height of the player's jump
 
 		public float
@@ -48,8 +50,7 @@ namespace Darkness.Runtime.ScriptableObjects {
 
 		[HideInInspector] public float jumpForce; //The actual force applied (upwards) to the player when they jump.
 
-		[Header("Both Jumps")]
-		public float
+		[Header("Both Jumps")] public float
 			jumpCutGravityMult; //Multiplier to increase gravity if the player releases thje jump button while still jumping
 
 		[Range(0f, 1)]
@@ -74,21 +75,29 @@ namespace Darkness.Runtime.ScriptableObjects {
 		public float coyoteTime; //Grace period after falling off a platform, where you can still jump
 
 		[Range(0.01f, 0.5f)]
-		public float jumpInputBufferTime; //Grace period after pressing jump where a jump will be automatically performed once the requirements (eg. being grounded) are met.
+		public float
+			jumpInputBufferTime; //Grace period after pressing jump where a jump will be automatically performed once the requirements (eg. being grounded) are met.
 
 		[Space(20)] [Header("Dash")] public int dashAmount;
 		public Vector2 dashSpeed;
-		public float dashSleepTime; //Duration for which the game freezes when we press dash but before we read directional input and apply a force
+
+		public float
+			dashSleepTime; //Duration for which the game freezes when we press dash but before we read directional input and apply a force
+
 		[Space(5)] public float dashAttackTime;
+
 		[Space(5)]
-		public float dashEndTime; //Time after you finish the inital drag phase, smoothing the transition back to idle (or any standard state)
+		public float
+			dashEndTime; //Time after you finish the inital drag phase, smoothing the transition back to idle (or any standard state)
+
 		public Vector2 dashEndSpeed; //Slows down player, makes dash feel more responsive (used in Celeste)
 		[Range(0f, 1f)] public float dashEndRunLerp; //Slows the affect of player movement while dashing
 		[Space(5)] public float dashRefillTime;
 		[Space(5)] [Range(0.01f, 0.5f)] public float dashInputBufferTime;
-		
-		[Space(20)] [Header("Slide")]
-		[Space(5)] [Range(0.01f, 0.5f)] public float slideInputBufferTime;
+
+		[Space(20)] [Header("Slide")] [Space(5)] [Range(0.01f, 0.5f)]
+		public float slideInputBufferTime;
+
 		[Range(0f, 1f)] public float slideEndRunLerp; //Slows the affect of player movement while dashing
 		public float slideSpeed;
 		public float slideTime;
@@ -99,23 +108,15 @@ namespace Darkness.Runtime.ScriptableObjects {
 		private void OnValidate() {
 			//Calculate gravity strength using the formula (gravity = 2 * jumpHeight / timeToJumpApex^2) 
 			gravityStrength = -(2 * jumpHeight) / (jumpTimeToApex * jumpTimeToApex);
-
 			//Calculate the rigidbody's gravity scale (ie: gravity strength relative to unity's gravity value, see project settings/Physics2D)
 			gravityScale = gravityStrength / Physics2D.gravity.y;
-
 			//Calculate are run acceleration & deceleration forces using formula: amount = ((1 / Time.fixedDeltaTime) * acceleration) / runMaxSpeed
 			runAccelAmount = (50 * runAcceleration) / runMaxSpeed;
 			runDeccelAmount = (50 * runDecceleration) / runMaxSpeed;
-
 			//Calculate jumpForce using the formula (initialJumpVelocity = gravity * timeToJumpApex)
 			jumpForce = Mathf.Abs(gravityStrength) * jumpTimeToApex;
-
-			#region Variable Ranges
-
 			runAcceleration = Mathf.Clamp(runAcceleration, 0.01f, runMaxSpeed);
 			runDecceleration = Mathf.Clamp(runDecceleration, 0.01f, runMaxSpeed);
-
-			#endregion
 		}
 	}
 }

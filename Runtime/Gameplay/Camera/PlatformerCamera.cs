@@ -30,7 +30,7 @@ namespace Darkness.Runtime.Gameplay.Camera {
                 return defaultCamera;
             }
             
-            return  _platformerMovement.RB.linearVelocityY < fallSpeedThreshold ? fallCamera : defaultCamera;
+            return  _platformerMovement.Rigidbody2D.linearVelocityY < fallSpeedThreshold ? fallCamera : defaultCamera;
         }
 
         private void SetupPlayer() {

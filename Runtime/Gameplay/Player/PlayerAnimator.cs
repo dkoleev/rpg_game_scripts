@@ -1,4 +1,5 @@
 ﻿using System;
+using Darkness.Runtime.ScriptableObjects;
 using UnityEngine;
 using VContainer;
 
@@ -71,17 +72,17 @@ namespace Darkness.Runtime.Gameplay.Player {
             
             SetSitting(_mov.IsSitting);
 
-            _anim.SetFloat(VelocityY, _mov.RB.linearVelocity.y);
-            _anim.SetFloat(VelocityX, Mathf.Abs(_mov.RB.linearVelocity.x));
+            _anim.SetFloat(VelocityY, _mov.Rigidbody2D.linearVelocity.y);
+            _anim.SetFloat(VelocityX, Mathf.Abs(_mov.Rigidbody2D.linearVelocity.x));
         }
 
-        private void PlayAttack(PlayerPlatformerAttack.AttackType attackType) {
+        private void PlayAttack(PlayerAttackSettings.AttackType attackType) {
             switch (attackType) {
-                case PlayerPlatformerAttack.AttackType.Default:
-                case PlayerPlatformerAttack.AttackType.Sit:
+                case PlayerAttackSettings.AttackType.Default:
+                case PlayerAttackSettings.AttackType.Sit:
                     _anim.SetTrigger(_mov.IsSitting ? SitAttack : Attack);
                     break;
-                case PlayerPlatformerAttack.AttackType.Slow:
+                case PlayerAttackSettings.AttackType.Slow:
                     _anim.SetTrigger(SlowAttack);
                     break;
                 default:

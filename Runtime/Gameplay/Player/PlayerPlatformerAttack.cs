@@ -1,31 +1,15 @@
 ﻿using System;
 using Cysharp.Threading.Tasks;
 using Darkness.Runtime.Messages;
+using Darkness.Runtime.ScriptableObjects;
 using MessagePipe;
 using UnityEngine;
 
 namespace Darkness.Runtime.Gameplay.Player {
     public class PlayerPlatformerAttack : MonoBehaviour {
-        public enum AttackType {
-            Default,
-            Slow,
-            Sit
-        }
-
-        [Header("hitbox")]
-        [SerializeField] private Vector2 hitboxSize;
-        [SerializeField] private Vector2 hitBoxOffset;
-        [SerializeField] private float attackAngle;
-        [SerializeField] private LayerMask enemyLayer;
-        [Header("Knock Player")]
-        [SerializeField] private float playerKnockbackForce;
-        [SerializeField] private bool playerBounceOnHit;
-        [Header("Knock Enemy")]
-        [SerializeField] private float enemyKnockbackForce;
-        [SerializeField] private float enemyBounceUpForce;
-        [SerializeField] private float enemyStunTime;
+        [SerializeField] private PlayerAttackSettings settings;
         
-        public event Action<AttackType> OnPerformAttack;
+        public event Action<PlayerAttackSettings.AttackType> OnPerformAttack;
         public event Action<bool> OnBlocking;
         public bool IsBlocking { get; private set; }
         public bool AttackInProgress { get; private set; }
@@ -57,7 +41,7 @@ namespace Darkness.Runtime.Gameplay.Player {
                         return;
                     }
                     if (data.Phase == InputMessage.InputPhase.Performed) {
-                        OnPerformAttack?.Invoke(data.IsSlowAttack ? AttackType.Slow : AttackType.Default);
+                        OnPerformAttack?.Invoke(data.IsSlowAttack ? PlayerAttackSettings.AttackType.Slow : PlayerAttackSettings.AttackType.Default);
                         AttackInProgress = true;
                         FinishAttack(data.IsSlowAttack).Forget();
                     }
@@ -102,8 +86,8 @@ namespace Darkness.Runtime.Gameplay.Player {
         }
 
         private void PerformAttack() {
-            var hitBoxPos = (Vector2)transform.position + (Vector2)(transform.rotation * hitBoxOffset);
-            var hits = Physics2D.OverlapBoxAll(hitBoxPos, hitboxSize, attackAngle, enemyLayer);
+            var hitBoxPos = (Vector2)transform.position + (Vector2)(transform.rotation * settings.hitBoxOffset);
+            var hits = Physics2D.OverlapBoxAll(hitBoxPos, settings.hitboxSize, settings.attackAngle, settings.enemyLayer);
             foreach (var hit in hits) {
                 var isHit = false;
                 var hitComponent = hit.GetComponent<IHittable>();
@@ -113,7 +97,7 @@ namespace Darkness.Runtime.Gameplay.Player {
                     var physicsComponent = hit.GetComponent<IPhysicsObject>();
                     if (physicsComponent is not null) {
                         var attackDir = (physicsComponent.Transform.position - transform.position).normalized;
-                        var knockDir = new Vector2(attackDir.x * enemyKnockbackForce, enemyBounceUpForce);
+                        var knockDir = new Vector2(attackDir.x * settings.enemyKnockbackForce, settings.enemyBounceUpForce);
                         physicsComponent.Rigidbody2D.AddForce(knockDir, ForceMode2D.Impulse);
                     }    
                     
@@ -121,9 +105,9 @@ namespace Darkness.Runtime.Gameplay.Player {
                 }
 
                 if (isHit) {
-                    if (playerBounceOnHit) {
+                    if (settings.playerBounceOnHit) {
                         _rb.linearVelocity = new Vector2(_rb.linearVelocity.x, 0);
-                        _rb.AddForce(Vector2.up * playerKnockbackForce, ForceMode2D.Impulse);
+                        _rb.AddForce(Vector2.up * settings.playerKnockbackForce, ForceMode2D.Impulse);
                     }
                     break;
                 }
@@ -136,9 +120,9 @@ namespace Darkness.Runtime.Gameplay.Player {
 
         private void OnDrawGizmosSelected() {
             Gizmos.color = Color.darkRed;
-            var hitBoxPos = (Vector2)transform.position + (Vector2)(transform.rotation * hitBoxOffset);
-            Gizmos.matrix = Matrix4x4.TRS(hitBoxPos, Quaternion.Euler(0, 0, attackAngle), Vector3.one);
-            Gizmos.DrawWireCube(Vector3.zero, hitboxSize);
+            var hitBoxPos = (Vector2)transform.position + (Vector2)(transform.rotation * settings.hitBoxOffset);
+            Gizmos.matrix = Matrix4x4.TRS(hitBoxPos, Quaternion.Euler(0, 0, settings.attackAngle), Vector3.one);
+            Gizmos.DrawWireCube(Vector3.zero, settings.hitboxSize);
         }
     }
 }
