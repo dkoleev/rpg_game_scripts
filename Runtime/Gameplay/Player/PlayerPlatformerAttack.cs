@@ -2,13 +2,15 @@
 using Cysharp.Threading.Tasks;
 using Darkness.Runtime.Messages;
 using Darkness.Runtime.ScriptableObjects;
+using Drawing;
 using MessagePipe;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace Darkness.Runtime.Gameplay.Player {
-    public class PlayerPlatformerAttack : MonoBehaviour {
+    public class PlayerPlatformerAttack : MonoBehaviourGizmos {
         [SerializeField] private PlayerAttackSettings settings;
-        
+
         public event Action<PlayerAttackSettings.AttackType> OnPerformAttack;
         public event Action<bool> OnBlocking;
         public bool IsBlocking { get; private set; }
@@ -40,11 +42,15 @@ namespace Darkness.Runtime.Gameplay.Player {
                     if (AttackInProgress) {
                         return;
                     }
+
                     if (data.Phase == InputMessage.InputPhase.Performed) {
-                        OnPerformAttack?.Invoke(data.IsSlowAttack ? PlayerAttackSettings.AttackType.Slow : PlayerAttackSettings.AttackType.Default);
+                        OnPerformAttack?.Invoke(data.IsSlowAttack
+                            ? PlayerAttackSettings.AttackType.Slow
+                            : PlayerAttackSettings.AttackType.Default);
                         AttackInProgress = true;
                         FinishAttack(data.IsSlowAttack).Forget();
                     }
+
                     break;
                 case InputMessage.InputType.Roll:
                     break;
@@ -87,20 +93,22 @@ namespace Darkness.Runtime.Gameplay.Player {
 
         private void PerformAttack() {
             var hitBoxPos = (Vector2)transform.position + (Vector2)(transform.rotation * settings.hitBoxOffset);
-            var hits = Physics2D.OverlapBoxAll(hitBoxPos, settings.hitboxSize, settings.attackAngle, settings.enemyLayer);
+            var hits = Physics2D.OverlapBoxAll(hitBoxPos, settings.hitboxSize, settings.attackAngle,
+                settings.enemyLayer);
             foreach (var hit in hits) {
                 var isHit = false;
                 var hitComponent = hit.GetComponent<IHittable>();
                 if (hitComponent is not null) {
                     hitComponent.TakeHit(0);
-                    
+
                     var physicsComponent = hit.GetComponent<IPhysicsObject>();
                     if (physicsComponent is not null) {
                         var attackDir = (physicsComponent.Transform.position - transform.position).normalized;
-                        var knockDir = new Vector2(attackDir.x * settings.enemyKnockbackForce, settings.enemyBounceUpForce);
+                        var knockDir = new Vector2(attackDir.x * settings.enemyKnockbackForce,
+                            settings.enemyBounceUpForce);
                         physicsComponent.Rigidbody2D.AddForce(knockDir, ForceMode2D.Impulse);
-                    }    
-                    
+                    }
+
                     isHit = true;
                 }
 
@@ -109,6 +117,7 @@ namespace Darkness.Runtime.Gameplay.Player {
                         _rb.linearVelocity = new Vector2(_rb.linearVelocity.x, 0);
                         _rb.AddForce(Vector2.up * settings.playerKnockbackForce, ForceMode2D.Impulse);
                     }
+
                     break;
                 }
             }
@@ -118,11 +127,16 @@ namespace Darkness.Runtime.Gameplay.Player {
             _disposable?.Dispose();
         }
 
-        private void OnDrawGizmosSelected() {
-            Gizmos.color = Color.darkRed;
-            var hitBoxPos = (Vector2)transform.position + (Vector2)(transform.rotation * settings.hitBoxOffset);
-            Gizmos.matrix = Matrix4x4.TRS(hitBoxPos, Quaternion.Euler(0, 0, settings.attackAngle), Vector3.one);
-            Gizmos.DrawWireCube(Vector3.zero, settings.hitboxSize);
+        public override void DrawGizmos() {
+            using (Draw.WithColor(Color.darkRed)) {
+                using (Draw.InLocalSpace(transform)) {
+                    using (Draw.WithMatrix(Matrix4x4.TRS(
+                               settings.hitBoxOffset,
+                               Quaternion.Euler(0, 0, settings.attackAngle), Vector3.one))) {
+                        Draw.WireBox(float3.zero, new float3(settings.hitboxSize.x, settings.hitboxSize.y, 0));
+                    }
+                }
+            }
         }
     }
 }
