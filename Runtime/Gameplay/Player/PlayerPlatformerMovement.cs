@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using Darkness.Runtime.ScriptableObjects;
 using Darkness.Runtime.State;
+using Darkness.Runtime.Utils;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
@@ -74,10 +75,13 @@ namespace Darkness.Runtime.Gameplay.Player {
 		
 		protected override void Awake() {
 			base.Awake();
+			
 			_playerState = GameManager.SaveSystem.Current.player;
+			
 			Rigidbody2D = GetComponent<Rigidbody2D>();
 			AnimHandler = GetComponent<PlayerAnimator>();
 			_playerInput = GetComponent<PlayerInput>();
+			
 			_moveAction = _playerInput.actions["Move"];
 			_jumpAction = _playerInput.actions["Jump"];
 			_dashAction = _playerInput.actions["Dash"];
@@ -102,7 +106,8 @@ namespace Darkness.Runtime.Gameplay.Player {
 			LastPressedDashTime -= Time.deltaTime;
 			LastPressedSlideTime -= Time.deltaTime;
 
-			_moveInput = _moveAction.ReadValue<Vector2>();
+			_moveInput = ControlUtils.ApplyDeadZones(_moveAction.ReadValue<Vector2>());
+			
 			if (_moveInput.x > 0.01f && !IsFacingRight) {
 				IsFacingRight = true;
 				UpdateFacing();
@@ -177,7 +182,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 				_isJumpFalling = false;
 			}
 
-			if (!IsDashing && !IsSliding) {
+			if (!IsDashing && !IsSliding && !IsSitting) {
 				//Jump
 				if (CanJump() && LastPressedJumpTime > 0) {
 					IsJumping = true;
@@ -232,7 +237,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 			if (CanSlide() && LastPressedSlideTime > 0) {
 					//If not direction pressed, slide forward
 				if (_moveInput != Vector2.zero) {
-					_lastSlideDir = _moveInput;
+					_lastSlideDir = new Vector2(_moveInput.x, 0);
 				}
 				else {
 					_lastSlideDir = IsFacingRight ? Vector2.right : Vector2.left;
@@ -319,7 +324,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 			transform.rotation = Quaternion.Euler(0f, IsFacingRight ? 0f : 180f, 0f);
 		}
 
-		//Methods which whandle input detected in Update()
+		//Methods which handle input detected in Update()
 		private void OnJumpInput() {
 			LastPressedJumpTime = movementSettings.jumpInputBufferTime;
 		}

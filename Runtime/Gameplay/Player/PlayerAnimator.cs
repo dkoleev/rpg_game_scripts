@@ -78,12 +78,15 @@ namespace Darkness.Runtime.Gameplay.Player {
 
         private void PlayAttack(PlayerAttackSettings.AttackType attackType) {
             switch (attackType) {
-                case PlayerAttackSettings.AttackType.Default:
+                case PlayerAttackSettings.AttackType.Light:
                 case PlayerAttackSettings.AttackType.Sit:
                     _anim.SetTrigger(_mov.IsSitting ? SitAttack : Attack);
                     break;
                 case PlayerAttackSettings.AttackType.Slow:
                     _anim.SetTrigger(SlowAttack);
+                    break;
+                case PlayerAttackSettings.AttackType.UpLight:
+                    _anim.Play("UpLightAttack");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(attackType), attackType, null);

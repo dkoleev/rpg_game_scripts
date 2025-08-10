@@ -6,23 +6,31 @@ using Drawing;
 using MessagePipe;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Darkness.Runtime.Gameplay.Player {
     public class PlayerPlatformerAttack : MonoBehaviourGizmos {
+        private const int MaxLightAttackIndex = 1;
+        
         [SerializeField] private PlayerAttackSettings settings;
 
         public event Action<PlayerAttackSettings.AttackType> OnPerformAttack;
         public event Action<bool> OnBlocking;
         public bool IsBlocking { get; private set; }
         public bool AttackInProgress { get; private set; }
+        public bool LightAttackInFinalStageProgress { get; private set; }
 
         private ISubscriber<InputMessage> _inputSubscriber;
         private IDisposable _disposable;
         private Rigidbody2D _rb;
         private PlayerPlatformerMovement _movement;
+        private PlayerInput _playerInput;
+        private bool _requestIncrementLightAttack;
+        private int _currentLightAttackTypeIndex;
 
         private void Awake() {
             _rb = GetComponent<Rigidbody2D>();
+            _playerInput = GetComponent<PlayerInput>();
         }
 
         private void Start() {
@@ -40,15 +48,17 @@ namespace Darkness.Runtime.Gameplay.Player {
             switch (data.Type) {
                 case InputMessage.InputType.Attack:
                     if (AttackInProgress) {
+                        if (LightAttackInFinalStageProgress) {
+                            _requestIncrementLightAttack = true;
+                        }
                         return;
                     }
 
                     if (data.Phase == InputMessage.InputPhase.Performed) {
                         OnPerformAttack?.Invoke(data.IsSlowAttack
                             ? PlayerAttackSettings.AttackType.Slow
-                            : PlayerAttackSettings.AttackType.Default);
-                        AttackInProgress = true;
-                        FinishAttack(data.IsSlowAttack).Forget();
+                            : GetLightAttackType());
+                        Attack(data.IsSlowAttack).Forget();
                     }
 
                     break;
@@ -76,19 +86,39 @@ namespace Darkness.Runtime.Gameplay.Player {
             }
         }
 
-        private async UniTaskVoid FinishAttack(bool isSlow) {
+        private async UniTaskVoid Attack(bool isSlow) {
+            _playerInput.DeactivateInput();
+            AttackInProgress = true;
             if (isSlow) {
                 await UniTask.Delay(TimeSpan.FromSeconds(0.360f));
                 PerformAttack();
                 await UniTask.Delay(TimeSpan.FromSeconds(0.720f));
-                AttackInProgress = false;
             }
             else {
-                await UniTask.Delay(TimeSpan.FromSeconds(0.300f));
-                PerformAttack();
-                await UniTask.Delay(TimeSpan.FromSeconds(0.420f));
-                AttackInProgress = false;
+                if (_currentLightAttackTypeIndex == 0) {
+                    await UniTask.Delay(TimeSpan.FromSeconds(0.300f));
+                    PerformAttack();
+                    LightAttackInFinalStageProgress = true;
+                    await UniTask.Delay(TimeSpan.FromSeconds(0.420f));
+                    LightAttackInFinalStageProgress = false;
+                }
+                else if (_currentLightAttackTypeIndex == 1) {
+                    await UniTask.Delay(TimeSpan.FromSeconds(0.300f));
+                    PerformAttack();
+                    LightAttackInFinalStageProgress = true;
+                    await UniTask.Delay(TimeSpan.FromSeconds(0.360f));
+                    LightAttackInFinalStageProgress = false;
+                }
             }
+
+            if (_requestIncrementLightAttack) {
+                _currentLightAttackTypeIndex++;
+                if (_currentLightAttackTypeIndex > MaxLightAttackIndex) {
+                    _currentLightAttackTypeIndex = 0;
+                }
+            }
+            AttackInProgress = false;
+            _playerInput.ActivateInput();            
         }
 
         private void PerformAttack() {
@@ -121,6 +151,17 @@ namespace Darkness.Runtime.Gameplay.Player {
                     break;
                 }
             }
+        }
+
+        private PlayerAttackSettings.AttackType GetLightAttackType() {
+            switch (_currentLightAttackTypeIndex) {
+                case 0:
+                    return PlayerAttackSettings.AttackType.Light;
+                case 1:
+                    return PlayerAttackSettings.AttackType.UpLight;
+            }
+
+            return PlayerAttackSettings.AttackType.Light;
         }
 
         public void OnDestroy() {

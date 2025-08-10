@@ -4,7 +4,8 @@ namespace Darkness.Runtime.ScriptableObjects {
     [CreateAssetMenu(fileName = "PlayerAttackSettings", menuName = "Game/Player Attack Settings")]
     public class PlayerAttackSettings : ScriptableObject {
         public enum AttackType {
-            Default,
+            Light,
+            UpLight,
             Slow,
             Sit
         }
