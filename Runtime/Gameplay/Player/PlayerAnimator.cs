@@ -33,11 +33,13 @@ namespace Darkness.Runtime.Gameplay.Player {
 
         private void OnEnable() {
             _attack.OnPerformAttack += PlayAttack;
+            _attack.OnHit += PlayHitWhileAttack;
             _attack.OnBlocking += SetBlock;
         }
 
         private void OnDisable() {
             _attack.OnPerformAttack -= PlayAttack;
+            _attack.OnHit -= PlayHitWhileAttack;
             _attack.OnBlocking -= SetBlock;
         }
 
@@ -90,6 +92,16 @@ namespace Darkness.Runtime.Gameplay.Player {
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(attackType), attackType, null);
+            }
+        }
+
+        private void PlayHitWhileAttack(PlayerAttackSettings.AttackType attackType) {
+            switch (attackType) {
+                case PlayerAttackSettings.AttackType.UpLight:
+                    var stateInfo = _anim.GetCurrentAnimatorStateInfo(0);
+                    var progress = stateInfo.normalizedTime % 1f;
+                    _anim.Play("UpLightAttackWithEffect", 0, progress);
+                    break;
             }
         }
 

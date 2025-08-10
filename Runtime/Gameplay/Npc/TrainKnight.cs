@@ -20,7 +20,7 @@ namespace Darkness.Runtime.Gameplay.Npc {
         }
         
         public void TakeHit(int damage) {
-            _animator.CrossFadeInFixedTime("Hit", 0f);
+            _animator.Play("Hit");
         }
 
         public void Stun(float duration) {
