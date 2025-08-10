@@ -99,11 +99,18 @@ namespace Darkness.Runtime.Gameplay.Player {
         }
 
         private void PlayHitWhileAttack(PlayerAttackSettings.AttackType attackType) {
+            var stateInfo = _anim.GetCurrentAnimatorStateInfo(0);
+            var progress = stateInfo.normalizedTime % 1f;
+
             switch (attackType) {
+                case PlayerAttackSettings.AttackType.Main:
+                    _anim.Play("AttackWithEffect", 0, progress);
+                    break;
                 case PlayerAttackSettings.AttackType.MainCombo1:
-                    var stateInfo = _anim.GetCurrentAnimatorStateInfo(0);
-                    var progress = stateInfo.normalizedTime % 1f;
                     _anim.Play("UpLightAttackWithEffect", 0, progress);
+                    break;
+                case PlayerAttackSettings.AttackType.MainCombo2:
+                    _anim.Play("MainCombo2WithEffect", 0, progress);
                     break;
             }
         }

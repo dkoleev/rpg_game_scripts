@@ -109,7 +109,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 			LastPressedSlideTime -= Time.deltaTime;
 
 			_moveInput = _playerAttack.AttackInProgress ? 
-				Vector2.zero : 
+				new Vector2(0f, _moveInput.y) : 
 				ControlUtils.ApplyDeadZones(_moveAction.ReadValue<Vector2>());
 			
 			if (_moveInput.x > 0.01f && !IsFacingRight) {

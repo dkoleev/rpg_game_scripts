@@ -35,6 +35,7 @@ namespace Darkness.Runtime.Gameplay.Player {
             
             _rb = GetComponent<Rigidbody2D>();
             _playerInput = GetComponent<PlayerInput>();
+            _movement = GetComponent<PlayerPlatformerMovement>();
         }
 
         private void Start() {
@@ -97,9 +98,12 @@ namespace Darkness.Runtime.Gameplay.Player {
             }
             
             AttackInProgress = true;
-            OnPerformAttack?.Invoke(isSlow
-                ? PlayerAttackSettings.AttackType.Slow
-                : GetLightAttackType());
+            if (_movement.IsSitting) {
+                OnPerformAttack?.Invoke(PlayerAttackSettings.AttackType.Sit);
+            }
+            else {
+                OnPerformAttack?.Invoke(isSlow ? PlayerAttackSettings.AttackType.Slow : GetLightAttackType());
+            }
 
             if (isSlow) {
                 await UniTask.Delay(TimeSpan.FromSeconds(0.360f), cancellationToken: cancellationToken);
