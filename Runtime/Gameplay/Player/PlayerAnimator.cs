@@ -116,5 +116,26 @@ namespace Darkness.Runtime.Gameplay.Player {
             _isSitting = isSitting;
             _anim.CrossFadeInFixedTime(isSitting ? "ToSit" : "FromSit", 0f); //Play instead CrossFadeInFixedTime?
         }
+
+        private void PlayAnimationFromOffset(string clipName, float skipSeconds) {
+            // Find the clip in the Animator
+            var controller = _anim.runtimeAnimatorController;
+            AnimationClip targetClip = null;
+
+            foreach (var clip in controller.animationClips) {
+                if (clip.name != clipName) continue;
+                targetClip = clip;
+                break;
+            }
+
+            if (targetClip == null) {
+                Debug.LogWarning($"Clip '{clipName}' not found in Animator!");
+                return;
+            }
+
+            var normalizedTime = skipSeconds / targetClip.length;
+            _anim.Play(clipName, 0, normalizedTime);
+            
+        }
     }
 }

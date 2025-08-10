@@ -135,8 +135,15 @@ namespace Darkness.Runtime.Gameplay.Player {
                     }
 
                     PerformAttack(PlayerAttackSettings.AttackType.Light);
+                    
+                    await UniTask.Delay(TimeSpan.FromSeconds(0.120f), cancellationToken: cancellationToken);
+                    if (cancellationToken.IsCancellationRequested) {
+                        CleanupAfterAttack();
+                        return;
+                    }
                     LightAttackInFinalStageProgress = true;
-                    await UniTask.Delay(TimeSpan.FromSeconds(0.420f), cancellationToken: cancellationToken);
+                    
+                    await UniTask.Delay(TimeSpan.FromSeconds(0.300f), cancellationToken: cancellationToken);
                     if (cancellationToken.IsCancellationRequested) {
                         CleanupAfterAttack();
                         return;
@@ -152,8 +159,16 @@ namespace Darkness.Runtime.Gameplay.Player {
                     }
 
                     PerformAttack(PlayerAttackSettings.AttackType.UpLight);
+                    
+                    await UniTask.Delay(TimeSpan.FromSeconds(0.060f), cancellationToken: cancellationToken);
+                    if (cancellationToken.IsCancellationRequested) {
+                        CleanupAfterAttack();
+                        return;
+                    }
+                    
                     LightAttackInFinalStageProgress = true;
-                    await UniTask.Delay(TimeSpan.FromSeconds(0.360f), cancellationToken: cancellationToken);
+                    
+                    await UniTask.Delay(TimeSpan.FromSeconds(0.300f), cancellationToken: cancellationToken);
                     if (cancellationToken.IsCancellationRequested) {
                         CleanupAfterAttack();
                         return;
