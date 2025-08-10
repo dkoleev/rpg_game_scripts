@@ -80,15 +80,18 @@ namespace Darkness.Runtime.Gameplay.Player {
 
         private void PlayAttack(PlayerAttackSettings.AttackType attackType) {
             switch (attackType) {
-                case PlayerAttackSettings.AttackType.Light:
+                case PlayerAttackSettings.AttackType.Main:
                 case PlayerAttackSettings.AttackType.Sit:
                     _anim.SetTrigger(_mov.IsSitting ? SitAttack : Attack);
                     break;
                 case PlayerAttackSettings.AttackType.Slow:
                     _anim.SetTrigger(SlowAttack);
                     break;
-                case PlayerAttackSettings.AttackType.UpLight:
+                case PlayerAttackSettings.AttackType.MainCombo1:
                     _anim.Play("UpLightAttack");
+                    break;
+                case PlayerAttackSettings.AttackType.MainCombo2:
+                    _anim.Play("MainCombo2");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(attackType), attackType, null);
@@ -97,7 +100,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 
         private void PlayHitWhileAttack(PlayerAttackSettings.AttackType attackType) {
             switch (attackType) {
-                case PlayerAttackSettings.AttackType.UpLight:
+                case PlayerAttackSettings.AttackType.MainCombo1:
                     var stateInfo = _anim.GetCurrentAnimatorStateInfo(0);
                     var progress = stateInfo.normalizedTime % 1f;
                     _anim.Play("UpLightAttackWithEffect", 0, progress);

@@ -11,7 +11,7 @@ using UnityEngine.InputSystem;
 
 namespace Darkness.Runtime.Gameplay.Player {
     public class PlayerPlatformerAttack : MonoBehaviourGizmosExt {
-        private const int MaxLightAttackIndex = 1;
+        private const int MaxLightAttackIndex = 2;
         
         [SerializeField] private PlayerAttackSettings settings;
 
@@ -54,10 +54,6 @@ namespace Darkness.Runtime.Gameplay.Player {
                     if (AttackInProgress) {
                         if (LightAttackInFinalStageProgress) {
                             _lightAttackSeriesIndex++;
-                            _attackCancellationSource?.Cancel(); // Cancel any ongoing attack
-                            _attackCancellationSource = new CancellationTokenSource();
-
-                            Attack(false, _attackCancellationSource.Token).Forget();
                         }
                         return;
                     }
@@ -94,7 +90,6 @@ namespace Darkness.Runtime.Gameplay.Player {
 
         private async UniTaskVoid Attack(bool isSlow, CancellationToken cancellationToken) {
             GameManager.Logger.Log("[Attack]: Start attack");
-            _playerInput.DeactivateInput();
             LightAttackInFinalStageProgress = false;
             
             if (_lightAttackSeriesIndex > MaxLightAttackIndex) {
@@ -105,92 +100,80 @@ namespace Darkness.Runtime.Gameplay.Player {
             OnPerformAttack?.Invoke(isSlow
                 ? PlayerAttackSettings.AttackType.Slow
                 : GetLightAttackType());
-            
-            if (cancellationToken.IsCancellationRequested) {
-                CleanupAfterAttack();
-                return;
-            }
-            
+
             if (isSlow) {
                 await UniTask.Delay(TimeSpan.FromSeconds(0.360f), cancellationToken: cancellationToken);
-                if (cancellationToken.IsCancellationRequested) {
-                    CleanupAfterAttack();
-                    return;
-                }
 
                 PerformAttack(PlayerAttackSettings.AttackType.Slow);
                 
                 await UniTask.Delay(TimeSpan.FromSeconds(0.720f), cancellationToken: cancellationToken);
-                if (cancellationToken.IsCancellationRequested) {
-                    CleanupAfterAttack();
-                    return;
-                }
             }
             else {
                 if (_lightAttackSeriesIndex == 0) {
                     await UniTask.Delay(TimeSpan.FromSeconds(0.300f), cancellationToken: cancellationToken);
-                    if (cancellationToken.IsCancellationRequested) {
-                        CleanupAfterAttack();
-                        return;
-                    }
 
-                    PerformAttack(PlayerAttackSettings.AttackType.Light);
+                    PerformAttack(PlayerAttackSettings.AttackType.Main);
                     
-                    await UniTask.Delay(TimeSpan.FromSeconds(0.120f), cancellationToken: cancellationToken);
-                    if (cancellationToken.IsCancellationRequested) {
-                        CleanupAfterAttack();
-                        return;
-                    }
                     LightAttackInFinalStageProgress = true;
-                    
-                    await UniTask.Delay(TimeSpan.FromSeconds(0.300f), cancellationToken: cancellationToken);
-                    if (cancellationToken.IsCancellationRequested) {
-                        CleanupAfterAttack();
+                    await UniTask.Delay(TimeSpan.FromSeconds(0.180f), cancellationToken: cancellationToken);
+                    LightAttackInFinalStageProgress = false;
+                    if (_lightAttackSeriesIndex == 1) {
+                        _attackCancellationSource?.Cancel();
+                        _attackCancellationSource = new CancellationTokenSource();
+                        Attack(false, _attackCancellationSource.Token).Forget();
                         return;
                     }
-
-                    LightAttackInFinalStageProgress = false;
+                    await UniTask.Delay(TimeSpan.FromSeconds(0.300f), cancellationToken: cancellationToken);
                 }
                 else if (_lightAttackSeriesIndex == 1) {
                     await UniTask.Delay(TimeSpan.FromSeconds(0.300f), cancellationToken: cancellationToken);
-                    if (cancellationToken.IsCancellationRequested) {
-                        CleanupAfterAttack();
-                        return;
-                    }
-
-                    PerformAttack(PlayerAttackSettings.AttackType.UpLight);
                     
-                    await UniTask.Delay(TimeSpan.FromSeconds(0.060f), cancellationToken: cancellationToken);
-                    if (cancellationToken.IsCancellationRequested) {
-                        CleanupAfterAttack();
-                        return;
-                    }
+                    PerformAttack(PlayerAttackSettings.AttackType.MainCombo1);
                     
                     LightAttackInFinalStageProgress = true;
-                    
-                    await UniTask.Delay(TimeSpan.FromSeconds(0.300f), cancellationToken: cancellationToken);
-                    if (cancellationToken.IsCancellationRequested) {
-                        CleanupAfterAttack();
+                    await UniTask.Delay(TimeSpan.FromSeconds(0.180f), cancellationToken: cancellationToken);
+                    LightAttackInFinalStageProgress = false;
+                    if (_lightAttackSeriesIndex == 2) {
+                        _attackCancellationSource?.Cancel();
+                        _attackCancellationSource = new CancellationTokenSource();
+                        Attack(false, _attackCancellationSource.Token).Forget();
                         return;
                     }
+                    
+                    await UniTask.Delay(TimeSpan.FromSeconds(0.180f), cancellationToken: cancellationToken);
 
-                    LightAttackInFinalStageProgress = false;
+                    _lightAttackSeriesIndex = 0;
+                } else if (_lightAttackSeriesIndex == 2) {
+                    await UniTask.Delay(TimeSpan.FromSeconds(0.360f), cancellationToken: cancellationToken);
+
+                    PerformAttack(PlayerAttackSettings.AttackType.MainCombo2);
+                
+                    await UniTask.Delay(TimeSpan.FromSeconds(0.720f), cancellationToken: cancellationToken);
+                    
                     _lightAttackSeriesIndex = 0;
                 }
             }
 
-            CleanupAfterAttack();
-        }
-        
-        private void CleanupAfterAttack() {
             AttackInProgress = false;
-            _playerInput.ActivateInput();
             GameManager.Logger.Log("[Attack]: Finish attack");
         }
-
+        
         private void PerformAttack(PlayerAttackSettings.AttackType attackType) {
-            var hitBoxPos = (Vector2)transform.position + (Vector2)(transform.rotation * settings.hitBoxOffset);
-            var hits = Physics2D.OverlapBoxAll(hitBoxPos, settings.hitboxSize, settings.attackAngle,
+            var hitBoxOffset = settings.hitBoxOffset;
+            var hitBoxSize = settings.hitboxSize;
+            switch (attackType) {
+                case PlayerAttackSettings.AttackType.MainCombo1:
+                    hitBoxOffset = settings.hitBoxCombo1Offset;
+                    hitBoxSize = settings.hitboxCombo1Size;
+                    break;
+                case PlayerAttackSettings.AttackType.MainCombo2:
+                    hitBoxOffset = settings.hitBoxCombo2Offset;
+                    hitBoxSize = settings.hitboxCombo2Size;
+                    break;
+            }
+            
+            var hitBoxPos = (Vector2)transform.position + (Vector2)(transform.rotation * hitBoxOffset);
+            var hits = Physics2D.OverlapBoxAll(hitBoxPos, hitBoxSize, settings.attackAngle,
                 settings.enemyLayer);
             foreach (var hit in hits) {
                 var isHit = false;
@@ -224,12 +207,14 @@ namespace Darkness.Runtime.Gameplay.Player {
         private PlayerAttackSettings.AttackType GetLightAttackType() {
             switch (_lightAttackSeriesIndex) {
                 case 0:
-                    return PlayerAttackSettings.AttackType.Light;
+                    return PlayerAttackSettings.AttackType.Main;
                 case 1:
-                    return PlayerAttackSettings.AttackType.UpLight;
+                    return PlayerAttackSettings.AttackType.MainCombo1;
+                case 2:
+                    return PlayerAttackSettings.AttackType.MainCombo2;
             }
 
-            return PlayerAttackSettings.AttackType.Light;
+            return PlayerAttackSettings.AttackType.Main;
         }
 
         public void OnDestroy() {
@@ -243,6 +228,38 @@ namespace Darkness.Runtime.Gameplay.Player {
                                settings.hitBoxOffset,
                                Quaternion.Euler(0, 0, settings.attackAngle), Vector3.one))) {
                         Draw.WireBox(float3.zero, new float3(settings.hitboxSize.x, settings.hitboxSize.y, 0));
+                        Draw.Label2D(
+                            float3.zero + new float3(0, settings.hitboxSize.y * 0.6f, 0), // Position above the box
+                            "Attack Hitbox Main"
+                        );
+                    }
+                }
+            }
+            
+            using (Draw.WithColor(Color.indianRed)) {
+                using (Draw.InLocalSpace(transform)) {
+                    using (Draw.WithMatrix(Matrix4x4.TRS(
+                               settings.hitBoxCombo1Offset,
+                               Quaternion.Euler(0, 0, settings.attackAngle), Vector3.one))) {
+                        Draw.WireBox(float3.zero, new float3(settings.hitboxCombo1Size.x, settings.hitboxCombo1Size.y, 0));
+                        Draw.Label2D(
+                            float3.zero + new float3(0, settings.hitboxCombo1Size.y * 0.6f, 0), // Position above the box
+                            "Attack Hitbox Combo_1"
+                        );
+                    }
+                }
+            }
+            
+            using (Draw.WithColor(Color.softRed)) {
+                using (Draw.InLocalSpace(transform)) {
+                    using (Draw.WithMatrix(Matrix4x4.TRS(
+                               settings.hitBoxCombo2Offset,
+                               Quaternion.Euler(0, 0, settings.attackAngle), Vector3.one))) {
+                        Draw.WireBox(float3.zero, new float3(settings.hitboxCombo2Size.x, settings.hitboxCombo2Size.y, 0));
+                        Draw.Label2D(
+                            float3.zero + new float3(0, settings.hitboxCombo2Size.y * 0.6f, 0), // Position above the box
+                            "Attack Hitbox Combo_2"
+                        );
                     }
                 }
             }

@@ -72,6 +72,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 		private InputAction _slideAction;
 
 		private PlayerState _playerState;
+		private PlayerPlatformerAttack _playerAttack;
 		
 		protected override void Awake() {
 			base.Awake();
@@ -81,6 +82,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 			Rigidbody2D = GetComponent<Rigidbody2D>();
 			AnimHandler = GetComponent<PlayerAnimator>();
 			_playerInput = GetComponent<PlayerInput>();
+			_playerAttack = GetComponent<PlayerPlatformerAttack>();
 			
 			_moveAction = _playerInput.actions["Move"];
 			_jumpAction = _playerInput.actions["Jump"];
@@ -106,7 +108,9 @@ namespace Darkness.Runtime.Gameplay.Player {
 			LastPressedDashTime -= Time.deltaTime;
 			LastPressedSlideTime -= Time.deltaTime;
 
-			_moveInput = ControlUtils.ApplyDeadZones(_moveAction.ReadValue<Vector2>());
+			_moveInput = _playerAttack.AttackInProgress ? 
+				Vector2.zero : 
+				ControlUtils.ApplyDeadZones(_moveAction.ReadValue<Vector2>());
 			
 			if (_moveInput.x > 0.01f && !IsFacingRight) {
 				IsFacingRight = true;
