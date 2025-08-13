@@ -37,6 +37,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 		public bool IsSliding { get; private set; }
 		public bool IsSitting { get; private set; }
 		public bool IsJumpFalling => _isJumpFalling;
+		public bool IsLanding { get; private set; }
 
 		//Timers (also all fields, could be private and a method returning a bool could be used)
 		public float LastOnGroundTime { get; private set; }
@@ -108,7 +109,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 			LastPressedDashTime -= Time.deltaTime;
 			LastPressedSlideTime -= Time.deltaTime;
 
-			_moveInput = _playerAttack.AttackInProgress ? 
+			_moveInput = _playerAttack.AttackInProgress || _playerAttack.IsBlocking ? 
 				new Vector2(0f, _moveInput.y) : 
 				ControlUtils.ApplyDeadZones(_moveAction.ReadValue<Vector2>());
 			

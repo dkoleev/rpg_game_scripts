@@ -104,7 +104,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 
             switch (attackType) {
                 case PlayerAttackSettings.AttackType.Main:
-                    _anim.Play("AttackWithEffect", 0, progress);
+                    // _anim.Play("AttackWithEffect", 0, progress);
                     break;
                 case PlayerAttackSettings.AttackType.MainCombo1:
                     _anim.Play("UpLightAttackWithEffect", 0, progress);
