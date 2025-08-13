@@ -1,4 +1,5 @@
 ﻿using System;
+using Alchemy.Inspector;
 using Cysharp.Threading.Tasks;
 using Darkness.Runtime.ScriptableObjects;
 using UnityEngine;
@@ -6,6 +7,8 @@ using DG.Tweening;
 
 namespace Darkness.Runtime.Gameplay.Effects {
     public class HitStop : MonoBehaviour {
+        [SerializeField] private bool defaultSettings;
+        [ShowIf("defaultSettings")]
         [SerializeField] private HitStopSettings settings;
         
         public async UniTask Stop(HitStopSettings hitStopSettings) {

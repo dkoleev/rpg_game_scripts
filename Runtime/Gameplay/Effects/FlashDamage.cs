@@ -1,4 +1,5 @@
-﻿using Darkness.Runtime.ScriptableObjects;
+﻿using Alchemy.Inspector;
+using Darkness.Runtime.ScriptableObjects;
 using DG.Tweening;
 using UnityEngine;
 
@@ -7,6 +8,8 @@ namespace Darkness.Runtime.Gameplay.Effects {
         private static readonly int FlashColor = Shader.PropertyToID("_FlashColor");
         private static readonly int FlashAmount = Shader.PropertyToID("_FlashAmount");
 
+        [SerializeField] private bool defaultSettings;
+        [ShowIf("defaultSettings")]
         [SerializeField] private FlashDamageSettings settings;
 
         private SpriteRenderer[] _spriteRenderers;

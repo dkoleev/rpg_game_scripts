@@ -183,7 +183,7 @@ namespace Darkness.Runtime.Gameplay.Player {
                 var isHit = false;
                 var hitComponent = hit.GetComponent<IHittable>();
                 if (hitComponent is not null) {
-                    hitComponent.TakeHit(0);
+                    hitComponent.TakeHit(25);
 
                     var physicsComponent = hit.GetComponent<IPhysicsObject>();
                     if (physicsComponent is not null) {

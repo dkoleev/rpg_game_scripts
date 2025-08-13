@@ -1,12 +1,11 @@
-﻿using System;
-using Alchemy.Inspector;
+﻿using Alchemy.Inspector;
 using Cysharp.Threading.Tasks;
 using Darkness.Runtime.Gameplay.Effects;
 using Darkness.Runtime.ScriptableObjects;
 using UnityEngine;
 
 namespace Darkness.Runtime.Gameplay.Npc {
-    public class TrainKnight : MonoBehaviour, IHittable, IPhysicsObject {
+    public class TrainKnight : MonoBehaviourExt, IHittable, IPhysicsObject {
         [Title("Hit Stop Settings")]
         [SerializeField] [Required] private HitStopSettings takeDamageHitStopSettings;
         [SerializeField] [Required] private HitStopSettings deadHitStopSettings;
@@ -35,7 +34,9 @@ namespace Darkness.Runtime.Gameplay.Npc {
             CheckFields();
         }
 
-        private void Awake() {
+        protected override void Awake() {
+            base.Awake();
+            
             CheckFields();
             
             _animator = GetComponentInChildren<Animator>();
@@ -52,7 +53,9 @@ namespace Darkness.Runtime.Gameplay.Npc {
         
         public void TakeHit(int damage) {
             _health -= damage;
+            GameManager.Logger.Log($"{gameObject.name} take hit: damage: <color=red>{damage}</color>, health: <color=red>{_health}</color>");
             if (_health <= 0) {
+                _health = 100;
                 _animator.Play("Dead");
                 if (_flashDamage != null) {
                     _flashDamage.Flash(deadFlashDamageSettings);
