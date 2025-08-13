@@ -30,15 +30,13 @@ namespace Darkness.Runtime.Gameplay.Player {
         private int _lightAttackSeriesIndex;
         private CancellationTokenSource _attackCancellationSource;
 
-        protected override void Awake() {
-            base.Awake();
-            
+        private void Awake() {
             _rb = GetComponent<Rigidbody2D>();
             _playerInput = GetComponent<PlayerInput>();
             _movement = GetComponent<PlayerPlatformerMovement>();
         }
 
-        private void Start() {
+        protected override void OnGameReady() {
             SetupSubscribers();
         }
 

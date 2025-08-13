@@ -34,9 +34,7 @@ namespace Darkness.Runtime.Gameplay.Npc {
             CheckFields();
         }
 
-        protected override void Awake() {
-            base.Awake();
-            
+        private void Awake() {
             CheckFields();
             
             _animator = GetComponentInChildren<Animator>();
@@ -53,7 +51,7 @@ namespace Darkness.Runtime.Gameplay.Npc {
         
         public void TakeHit(int damage) {
             _health -= damage;
-            GameManager.Logger.Log($"{gameObject.name} take hit: damage: <color=red>{damage}</color>, health: <color=red>{_health}</color>");
+            GameManager.Logger.Log($"{gameObject.name} take hit: damage: <color=green>{damage}</color>, health: <color=green>{_health}</color>");
             if (_health <= 0) {
                 _health = 100;
                 _animator.Play("Dead");

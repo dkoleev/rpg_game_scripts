@@ -47,6 +47,7 @@ namespace Darkness.Runtime {
 
         private async UniTask StartGame(RunMode runMode) {
             _gameLogger.SetLevel(GameLogger.LogLevel.All);
+            var gameManager = GameObject.FindWithTag("GameManager").GetComponent<GameManager>();
             DOTween.Init(false, false, LogBehaviour.Default).SetCapacity(100, 30);
             LoadGameData();
             LoadPlayerState();
@@ -68,6 +69,8 @@ namespace Darkness.Runtime {
             var cameraTarget = GameObject.FindGameObjectWithTag("CameraTarget").GetComponent<CameraTarget>();
             cameraTarget.SetTarget(player.transform);
             SetCameraInstantlyToPosition(cameraTarget.transform);
+            
+            gameManager.SetGameReady();
         }
 
         private async UniTask<GameObject> SpawnPlayer() {

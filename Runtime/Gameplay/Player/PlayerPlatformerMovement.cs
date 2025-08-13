@@ -4,7 +4,6 @@ using Darkness.Runtime.State;
 using Darkness.Runtime.Utils;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Serialization;
 
 namespace Darkness.Runtime.Gameplay.Player {
 	public class PlayerPlatformerMovement : MonoBehaviourExt {
@@ -75,11 +74,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 		private PlayerState _playerState;
 		private PlayerPlatformerAttack _playerAttack;
 		
-		protected override void Awake() {
-			base.Awake();
-			
-			_playerState = GameManager.SaveSystem.Current.player;
-			
+		protected void Awake() {
 			Rigidbody2D = GetComponent<Rigidbody2D>();
 			AnimHandler = GetComponent<PlayerAnimator>();
 			_playerInput = GetComponent<PlayerInput>();
@@ -90,16 +85,22 @@ namespace Darkness.Runtime.Gameplay.Player {
 			_dashAction = _playerInput.actions["Dash"];
 			_slideAction = _playerInput.actions["Slide"];
 		}
-
-		private void Start() {
+		
+		protected override void OnGameReady() {
+			_playerState = GameManager.SaveSystem.Current.player;
+			
 			SetGravityScale(movementSettings.gravityScale);
 			UpdateFacing();
 			if (_playerState.currentPosition != Vector2.zero) {
 				transform.position = _playerState.currentPosition;
 			}
 		}
-		
+
 		private void Update() {
+			if (!GameIsReady) {
+				return;
+			}
+			
 			LastOnGroundTime -= Time.deltaTime;
 			LastOnWallTime -= Time.deltaTime;
 			LastOnWallRightTime -= Time.deltaTime;

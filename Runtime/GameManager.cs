@@ -4,6 +4,7 @@ using VContainer;
 
 namespace Darkness.Runtime {
     public class GameManager : MonoBehaviour {
+        public bool GameIsReady { get; private set; }
         public SaveSystem SaveSystem { get; private set; }
         public GameLogger Logger { get; private set; }
         
@@ -11,6 +12,10 @@ namespace Darkness.Runtime {
         public void Construct(SaveSystem saveSystem, GameLogger logger) {
             SaveSystem = saveSystem;
             Logger = logger;
+        }
+        
+        public void SetGameReady() {
+            GameIsReady = true;
         }
     }
 }

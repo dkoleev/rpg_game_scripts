@@ -4,6 +4,8 @@
         Patrol,
         Chase,
         Attack,
-        Return
+        ReturnToStartPoint,
+        Stunned,
+        Dead
     }
 }
