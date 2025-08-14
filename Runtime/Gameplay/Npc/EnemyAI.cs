@@ -14,6 +14,9 @@ namespace Darkness.Runtime.Gameplay.Npc {
         [SerializeField] private float chaseRange = 5f;
         [SerializeField] private float attackRange = 1f;
         [SerializeField] private float attackCooldown = 1f;
+        [SerializeField] private float wallCheckDistance = 0.5f;
+        [SerializeField] private float groundCheckDownDistance = 1.0f;
+        [SerializeField] private float groundCheckForwardDistance = 0.5f;
         [SerializeField] private bool startDirectionToRight = true;
         [SerializeField] private LayerMask groundLayer;
         [SerializeField] private LayerMask wallLayer;
@@ -155,72 +158,85 @@ namespace Darkness.Runtime.Gameplay.Npc {
         }
 
         private void Move() {
-            Debug.Log("Move");
             transform.Translate(Vector2.right * (_currentDirection * moveSpeed * Time.deltaTime));
         }
 
         private bool IsGroundAhead() {
-            return Physics2D.Raycast(transform.position + Vector3.right * (_currentDirection * 0.5f), Vector2.down, 1f,
+            return Physics2D.Raycast(transform.position + Vector3.right * (_currentDirection * groundCheckForwardDistance), Vector2.down, groundCheckDownDistance,
                 groundLayer);
         }
 
         private bool IsWallAhead() {
-            return Physics2D.Raycast(transform.position, Vector2.right * _currentDirection, 0.5f, wallLayer);
+            return Physics2D.Raycast(transform.position, Vector2.right * _currentDirection, wallCheckDistance, wallLayer);
         }
 
         public override void DrawGizmos() {
             base.DrawGizmos();
 
             // Ground check ray
-            Vector3 groundStart = transform.position + Vector3.right * (_currentDirection * 0.5f);
-            Vector3 groundEnd = groundStart + Vector3.down * 1f;
-            Color groundColor = IsGroundAhead() ? Color.green : Color.red;
+            var groundStart = transform.position + Vector3.right * (_currentDirection * groundCheckForwardDistance);
+            var groundEnd = groundStart + Vector3.down * groundCheckDownDistance;
+            var groundColor = IsGroundAhead() ? Color.green : Color.red;
 
             using (Draw.WithColor(groundColor)) {
                 using (Draw.WithLineWidth(3)) {
                     Draw.Line(groundStart, groundEnd);
+                    DrawLabel(groundStart, groundEnd, $"groundCheck: {groundCheckDownDistance:F2}");
                 }
             }
 
             // Wall check ray
-            Vector3 wallStart = transform.position;
-            Vector3 wallEnd = wallStart + Vector3.right * _currentDirection * 0.5f;
-            Color wallColor = IsWallAhead() ? Color.red : Color.green;
+            var wallStart = transform.position;
+            var wallEnd = wallStart + Vector3.right * _currentDirection * 0.5f;
+            var wallColor = IsWallAhead() ? Color.red : Color.green;
 
             using (Draw.WithColor(wallColor)) {
                 using (Draw.WithLineWidth(3)) {
                     Draw.Line(wallStart, wallEnd);
+                    DrawLabel(wallStart, wallEnd, $"wallCheck: {wallCheckDistance:F2}");
                 }
             }
         
             // Attack range visualization
-            Vector3 attackStart = transform.position + new Vector3(0, 0.1f);
-            Vector3 attackEnd = attackStart + Vector3.right * _currentDirection * attackRange;
+            var attackStart = transform.position + new Vector3(0, 0.1f);
+            var attackEnd = attackStart + Vector3.right * _currentDirection * attackRange;
 
-            using (Draw.WithColor(Color.yellow))
-            using (Draw.WithLineWidth(3f))
-            {
-                Draw.Line(attackStart, attackEnd);
+            using (Draw.WithColor(Color.yellow)) {
+                using (Draw.WithLineWidth(3f)) {
+                    Draw.Line(attackStart, attackEnd);
+                    DrawLabel(attackStart, attackEnd, $"attack: {attackRange:F2}");
+                }
             }
+
+            // Add label above the middle of the line
+            // Vector3 attackMid = (attackStart + attackEnd) * 0.5f;// + Vector3.up * 0.1f; // shift up 0.1
 
             // Optional: draw a small circle at attack end
-            using (Draw.WithColor(Color.yellow))
-            using (Draw.WithLineWidth(2f))
-            {
-                float3 center = new float3(attackEnd.x, attackEnd.y, attackEnd.z);
-                float3 normal = new float3(0f, 0f, 1f); // Z-axis normal for XY plane
-                Draw.Circle(center, normal, 0.05f);
+            using (Draw.WithColor(Color.yellow)) {
+                using (Draw.WithLineWidth(2f)) {
+                    var center = new float3(attackEnd.x, attackEnd.y, attackEnd.z);
+                    var normal = new float3(0f, 0f, 1f); // Z-axis normal for XY plane
+                    Draw.Circle(center, normal, 0.05f);
+                }
             }
-            
-            
-            // Chase range visualization
-            Vector3 chaseStart = transform.position + new Vector3(0, 0.2f);
-            Vector3 chaseEnd = chaseStart + Vector3.right * _currentDirection * chaseRange;
 
-            using (Draw.WithColor(Color.blueViolet))
-            using (Draw.WithLineWidth(3f))
-            {
-                Draw.Line(chaseStart, chaseEnd);
+
+            // Chase range visualization
+            var chaseStart = transform.position + new Vector3(0, 0.2f);
+            var chaseEnd = chaseStart + Vector3.right * _currentDirection * chaseRange;
+
+            using (Draw.WithColor(Color.blueViolet)) {
+                using (Draw.WithLineWidth(3f)) {
+                    Draw.Line(chaseStart, chaseEnd);
+                    DrawLabel(chaseStart, chaseEnd, $"chase: {chaseRange:F2}");
+                }
+            }
+
+            return;
+
+            void DrawLabel(Vector3 startPoint, Vector3 endPoint, string text, float size = 30) {
+                var mid = (startPoint + endPoint) * 0.5f + Vector3.up * 0.03f;
+                Draw.Label2D(mid, text, size);
             }
         }
     }
