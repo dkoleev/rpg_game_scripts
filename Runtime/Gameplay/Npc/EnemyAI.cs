@@ -1,33 +1,65 @@
 ﻿using System;
 using Alchemy.Inspector;
 using Cysharp.Threading.Tasks;
+using Darkness.Runtime.Gameplay.Npc.EnemyStates;
 using Darkness.Runtime.ScriptableObjects;
 using Drawing;
 using Unity.Mathematics;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 namespace Darkness.Runtime.Gameplay.Npc {
-    public class EnemyAI : MonoBehaviourGizmosExt {
+    public class EnemyAI : MonoBehaviourGizmosExt, IHittable, IPhysicsObject {
         [Required] [SerializeField] private EnemyAISettings settings;
 
+        /// <summary>
+        /// Triggered when the enemy state changes.
+        /// </summary>
+        /// <param name="oldState">The state before transition.</param>
+        /// <param name="newState">The state after transition.</param>
+        public delegate void StateChangedHandler(IEnemyState oldState, IEnemyState newState);
+        public event StateChangedHandler OnStateChanged;
+
+        public Rigidbody2D Rigidbody2D => _rigidbody2D;
+        public Transform Transform => transform;
+        
+        public Transform PlayerTransform => _playerTransform;
+
+        private bool _isFacingRight => _currentDirection == 1;
         private Rigidbody2D _rigidbody2D;
-        private EnemyState _currentState;
         private Vector2 _startPosition;
         private int _currentDirection; // -1 = left, 1 = right
         private Transform _playerTransform;
         private bool _attackInProgress;
-        private Animator _animator;
+
+        private IEnemyState _currentStateMachine;
 
         private void Awake() {
             _currentDirection = settings.StartDirectionToRight ? 1 : -1;
             _rigidbody2D = GetComponent<Rigidbody2D>();
-            _animator = GetComponentInChildren<Animator>();
+        }
+
+        protected override async UniTask Start() {
+            await base.Start();
+            ChangeState(new EnemyIdleState());
         }
 
         protected override void OnGameReady() {
             _startPosition = transform.position;
             _playerTransform = GameObject.FindWithTag("Player").transform;
+        }
+        
+        public void ChangeState(IEnemyState newState) {
+            var oldState = _currentStateMachine;
+            
+            _currentStateMachine?.Exit(this, settings);
+            _currentStateMachine = newState;
+            _currentStateMachine.Enter(this, settings);
+            
+            OnStateChanged?.Invoke(oldState, newState);
+
+            GameManager.Logger.Log(oldState is null
+                ? $"[Enemy]: State changed to {newState.GetType().Name}"
+                : $"[Enemy]: State changed from {oldState.GetType().Name} to {newState.GetType().Name}");
         }
 
         private void Update() {
@@ -35,137 +67,56 @@ namespace Darkness.Runtime.Gameplay.Npc {
                 return;
             }
 
-            switch (_currentState) {
-                case EnemyState.Idle:
-                    Idle().Forget();
-                    break;
-                case EnemyState.Patrol:
-                    Patrol();
-                    break;
-                case EnemyState.Chase:
-                    Chase();
-                    break;
-                case EnemyState.Attack:
-                    Attack().Forget();
-                    break;
-                case EnemyState.ReturnToStartPoint:
-                    ReturnToStartPoint();
-                    break;
-                case EnemyState.Stunned:
-                case EnemyState.Dead:
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            _currentStateMachine.Update(this, settings);
         }
-
-        private async UniTask Idle() {
-            var token = this.GetCancellationTokenOnDestroy();
-            await UniTask.Delay(TimeSpan.FromSeconds(Random.Range(2f, 4f)), cancellationToken: token);
-            Patrol();
-
-            var idleTime = Random.Range(2f, 4f);
-            var elapsed = 0f;
-
-            while (elapsed < idleTime) {
-                if (_playerTransform != null) {
-                    await UniTask.Yield(); // ждать следующий кадр
-                    return;
-                }
-                
-                // Если игрок в зоне атаки
-                if (Vector2.Distance(transform.position, _playerTransform.position) < settings.AttackRange) {
-                    _currentState = EnemyState.Attack;
-                    return;
-                }
-
-                // Если игрок в зоне погони
-                if (Vector2.Distance(transform.position, _playerTransform.position) < settings.ChaseRange) {
-                    _currentState = EnemyState.Chase;
-                    return;
-                }
-
-                await UniTask.Yield(); // ждать следующий кадр
-                elapsed += Time.deltaTime;
-            }
-
-            Patrol();
+        
+        public void TakeHit(int damage) {
+            
         }
-
-        private void Patrol() {
-            Move();
-            if (!IsGroundAhead() || IsWallAhead()) {
-                _currentDirection *= -1;
-            }
-
-            if (Vector2.Distance(transform.position, _playerTransform.position) < settings.AttackRange) {
-                _currentState = EnemyState.Attack;
-                return;
-            }
-
-            if (Vector2.Distance(transform.position, _playerTransform.position) < settings.ChaseRange) {
-                _currentState = EnemyState.Chase;
-            }
-        }
-
-        private void Chase() {
-            _currentDirection = _playerTransform.position.x > transform.position.x ? 1 : -1;
-            Move();
-
-            var distance = Vector2.Distance(transform.position, _playerTransform.position);
-            if (distance > settings.ChaseRange + 1.0f) {
-                _currentState = EnemyState.Patrol;
-            }
-            else if (distance <= settings.AttackRange) {
-                _currentState = EnemyState.Attack;
-            }
-        }
-
+        
         private void ReturnToStartPoint() {
             _currentDirection = _startPosition.x > transform.position.x ? 1 : -1;
             Move();
             if (Vector2.Distance(transform.position, _startPosition) < 0.1f) {
-                _currentState = EnemyState.Idle;
+                // _currentState = EnemyState.Idle;
             }
         }
-
-        private async UniTaskVoid Attack() {
-            if (_attackInProgress) {
-                return;
-            }
-
-            var distance = Vector2.Distance(transform.position, _playerTransform.position);
-            if (distance > settings.AttackRange) {
-                _currentState = EnemyState.Chase;
-                return;
-            }
-
-            _attackInProgress = true;
-            //TODO: Attack
-            GameManager.Logger.Log($"{gameObject.name}: perform attack");
-            await UniTask.Delay(TimeSpan.FromSeconds(settings.AttackCooldown));
-            _attackInProgress = false;
-        }
-
+        
         private void Stunned() { }
 
         private void Dead() {
             _rigidbody2D.linearVelocity = Vector2.zero;
         }
 
-        private void Move() {
-            transform.Translate(Vector2.right * (_currentDirection * settings.MoveSpeed * Time.deltaTime));
+        public void Move() {
+            var dir  = _isFacingRight ? Vector2.right : Vector2.left;
+            transform.Translate(dir * (_currentDirection * settings.MoveSpeed * Time.deltaTime));
         }
 
-        private bool IsGroundAhead() {
+        public void ChangeDirection() {
+            _currentDirection *= -1;
+            UpdateFacing();
+        }
+
+        public void SetDirection(int direction) {
+            _currentDirection = direction;
+            UpdateFacing();
+        }
+
+        public bool IsGroundAhead() {
             return Physics2D.Raycast(
                 transform.position + Vector3.right * (_currentDirection * settings.GroundCheckForwardDistance),
                 Vector2.down, settings.GroundCheckDownDistance,
                 settings.GroundLayer);
         }
 
-        private bool IsWallAhead() {
+        public bool IsWallAhead() {
             return Physics2D.Raycast(transform.position, Vector2.right * _currentDirection, settings.WallCheckDistance,
                 settings.WallLayer);
+        }
+        
+        private void UpdateFacing() {
+            transform.rotation = Quaternion.Euler(0f, _isFacingRight ? 0f : 180f, 0f);
         }
 
         public override void DrawGizmos() {
