@@ -3,6 +3,7 @@
 namespace Darkness.Runtime.ScriptableObjects {
     [CreateAssetMenu(fileName = "EnemyAI_Settings", menuName = "Game/Enemy AI Settings")]
     public class EnemyAISettings : ScriptableObject {
+        [field: SerializeField] public int Damage { get; private set; } = 5;
         [field: SerializeField] public float MoveSpeed { get; private set; } = 1f;
         [field: SerializeField] public float ChaseSpeed { get; private set; } = 2f;
         [field: SerializeField] public float ChaseRange { get; private set; } = 5f;
@@ -16,5 +17,6 @@ namespace Darkness.Runtime.ScriptableObjects {
         [field: SerializeField] public bool StartDirectionToRight { get; private set; } = true;
         [field: SerializeField] public LayerMask GroundLayer { get; private set; }
         [field: SerializeField] public LayerMask WallLayer { get; private set; }
+        [field: SerializeField] public LayerMask AttackLayer { get; private set; }
     }
 }

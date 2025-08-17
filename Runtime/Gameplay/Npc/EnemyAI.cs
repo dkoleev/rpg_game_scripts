@@ -1,15 +1,20 @@
-﻿using System;
-using Alchemy.Inspector;
+﻿using Alchemy.Inspector;
 using Cysharp.Threading.Tasks;
 using Darkness.Runtime.Gameplay.Npc.EnemyStates;
 using Darkness.Runtime.ScriptableObjects;
 using Drawing;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Darkness.Runtime.Gameplay.Npc {
     public class EnemyAI : MonoBehaviourGizmosExt, IHittable, IPhysicsObject {
         [Required] [SerializeField] private EnemyAISettings settings;
+
+        [HelpBox("Keep this collider disabled, so it doesn't interfere with physics. Also disable UseByComposite and IsTrigger",
+            HelpBoxMessageType.Warning)]
+        [SerializeField]
+        private Collider2D attackCollider;
 
         /// <summary>
         /// Triggered when the enemy state changes.
@@ -21,6 +26,7 @@ namespace Darkness.Runtime.Gameplay.Npc {
 
         public Rigidbody2D Rigidbody2D => _rigidbody2D;
         public Transform Transform => transform;
+        public Collider2D AttackCollider => attackCollider;
         
         public Transform PlayerTransform => _playerTransform;
 
@@ -36,16 +42,13 @@ namespace Darkness.Runtime.Gameplay.Npc {
         private void Awake() {
             _currentDirection = settings.StartDirectionToRight ? 1 : -1;
             _rigidbody2D = GetComponent<Rigidbody2D>();
-        }
-
-        protected override async UniTask Start() {
-            await base.Start();
-            ChangeState(new EnemyIdleState());
+            attackCollider.enabled = false;
         }
 
         protected override void OnGameReady() {
             _startPosition = transform.position;
             _playerTransform = GameObject.FindWithTag("Player").transform;
+            ChangeState(new EnemyIdleState());
         }
         
         public void ChangeState(IEnemyState newState) {

@@ -8,5 +8,6 @@ namespace Darkness.Runtime.State {
         public bool isFacingRight = true;
         public LevelType currentLocation = LevelType.Tutorial;
         public Vector2 currentPosition = Vector2.zero;
+        public int currentHealth = 100;
     }
 }

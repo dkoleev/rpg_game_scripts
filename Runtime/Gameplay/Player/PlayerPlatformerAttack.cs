@@ -3,6 +3,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Darkness.Runtime.Messages;
 using Darkness.Runtime.ScriptableObjects;
+using Darkness.Runtime.State;
 using Drawing;
 using MessagePipe;
 using Unity.Mathematics;
@@ -10,7 +11,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace Darkness.Runtime.Gameplay.Player {
-    public class PlayerPlatformerAttack : MonoBehaviourGizmosExt {
+    public class PlayerPlatformerAttack : MonoBehaviourGizmosExt, IHittable {
         private const int MaxLightAttackIndex = 2;
         
         [SerializeField] private PlayerAttackSettings settings;
@@ -29,6 +30,7 @@ namespace Darkness.Runtime.Gameplay.Player {
         private PlayerInput _playerInput;
         private int _lightAttackSeriesIndex;
         private CancellationTokenSource _attackCancellationSource;
+        private PlayerState _playerState;
 
         private void Awake() {
             _rb = GetComponent<Rigidbody2D>();
@@ -37,6 +39,7 @@ namespace Darkness.Runtime.Gameplay.Player {
         }
 
         protected override void OnGameReady() {
+            _playerState = GameManager.SaveSystem.Current.player;
             SetupSubscribers();
         }
 
@@ -265,6 +268,19 @@ namespace Darkness.Runtime.Gameplay.Player {
                     }
                 }
             }
+        }
+
+        public void TakeHit(int damage) {
+            _playerState.currentHealth -= damage;
+            GameManager.Logger.Log($"[Player]: Take hit. Damage: <color=red>{damage}</color>, Health: <color=red>{_playerState.currentHealth}</color>");
+            if (_playerState.currentHealth <= 0) {
+                _playerState.currentHealth = 0;
+                Dead();
+            }
+        }
+
+        private void Dead() {
+            GameManager.Logger.Log($"[Player]: Dead");
         }
     }
 }
