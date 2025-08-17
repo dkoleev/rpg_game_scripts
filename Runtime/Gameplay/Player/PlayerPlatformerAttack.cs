@@ -20,7 +20,10 @@ namespace Darkness.Runtime.Gameplay.Player {
 
         public event Action<PlayerAttackSettings.AttackType> OnPerformAttack;
         public event Action<PlayerAttackSettings.AttackType> OnHit;
+        public event Action OnHurt;
+        public event Action OnDead;
         public event Action<bool> OnBlocking;
+        public bool IsDead => _playerState.currentHealth <= 0;
         public bool IsBlocking { get; private set; }
         public bool AttackInProgress { get; private set; }
         public bool LightAttackInFinalStageProgress { get; private set; }
@@ -53,6 +56,10 @@ namespace Darkness.Runtime.Gameplay.Player {
         }
 
         private void OnInput(InputMessage data) {
+            if (IsDead) {
+                return;
+            }
+            
             switch (data.Type) {
                 case InputMessage.InputType.Attack:
                     if (AttackInProgress) {
@@ -223,6 +230,28 @@ namespace Darkness.Runtime.Gameplay.Player {
 
             return PlayerAttackSettings.AttackType.Main;
         }
+        
+        public void TakeHit(int damage) {
+            if (IsDead) {
+                return;
+            }
+            
+            _playerState.currentHealth -= damage;
+            GameManager.Logger.Log($"{LogPrefix} Take hit. Damage: <color=red>{damage}</color>, Health: <color=red>{_playerState.currentHealth}</color>");
+            if (_playerState.currentHealth <= 0) {
+                _playerState.currentHealth = 0;
+                Dead();
+            }
+            else {
+                OnHurt?.Invoke();
+            }
+        }
+
+        private void Dead() {
+            OnDead?.Invoke();
+            GameManager.Logger.Log($"{LogPrefix} Dead");
+        }
+
 
         public void OnDestroy() {
             _disposable?.Dispose();
@@ -270,19 +299,6 @@ namespace Darkness.Runtime.Gameplay.Player {
                     }
                 }
             }
-        }
-
-        public void TakeHit(int damage) {
-            _playerState.currentHealth -= damage;
-            GameManager.Logger.Log($"{LogPrefix} Take hit. Damage: <color=red>{damage}</color>, Health: <color=red>{_playerState.currentHealth}</color>");
-            if (_playerState.currentHealth <= 0) {
-                _playerState.currentHealth = 0;
-                Dead();
-            }
-        }
-
-        private void Dead() {
-            GameManager.Logger.Log($"{LogPrefix} Dead");
         }
     }
 }

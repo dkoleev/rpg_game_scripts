@@ -10,6 +10,11 @@ namespace Darkness.Runtime.Gameplay.Npc.EnemyStates {
             enemyAI.SetDirection(enemyAI.PlayerTransform.position.x > enemyAI.Transform.position.x ? 1 : -1);
             enemyAI.Move();
 
+            if (enemyAI.PlayerIsDead) {
+                enemyAI.ChangeState(new EnemyIdleState());
+                return;
+            }
+
             var distance = Vector2.Distance(enemyAI.Transform.position, enemyAI.PlayerTransform.position);
             if (distance > enemyAISettings.ChaseRange + 1.0f) {
                 enemyAI.ChangeState(new EnemyPatrolState());

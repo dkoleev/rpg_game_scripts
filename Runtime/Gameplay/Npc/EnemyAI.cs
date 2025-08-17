@@ -1,5 +1,6 @@
 ﻿using Alchemy.Inspector;
 using Darkness.Runtime.Gameplay.Npc.EnemyStates;
+using Darkness.Runtime.Gameplay.Player;
 using Darkness.Runtime.ScriptableObjects;
 using Drawing;
 using Unity.Mathematics;
@@ -30,12 +31,14 @@ namespace Darkness.Runtime.Gameplay.Npc {
         public Collider2D AttackCollider => attackCollider;
         
         public Transform PlayerTransform => _playerTransform;
+        public bool PlayerIsDead => _platformerAttack.IsDead;
 
         private bool IsFacingRight => _currentDirection == 1;
         private Rigidbody2D _rigidbody2D;
         private Vector2 _startPosition;
         private int _currentDirection; // -1 = left, 1 = right
         private Transform _playerTransform;
+        private PlayerPlatformerAttack _platformerAttack;
         private bool _attackInProgress;
 
         private IEnemyState _currentState;
@@ -51,6 +54,7 @@ namespace Darkness.Runtime.Gameplay.Npc {
         protected override void OnGameReady() {
             _startPosition = transform.position;
             _playerTransform = GameObject.FindWithTag("Player").transform;
+            _platformerAttack = PlayerTransform.GetComponent<PlayerPlatformerAttack>();
             ChangeState(new EnemyIdleState());
         }
         

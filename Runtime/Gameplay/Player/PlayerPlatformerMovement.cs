@@ -100,6 +100,10 @@ namespace Darkness.Runtime.Gameplay.Player {
 			if (!GameIsReady) {
 				return;
 			}
+
+			if (_playerAttack.IsDead) {
+				return;
+			}
 			
 			LastOnGroundTime -= Time.deltaTime;
 			LastOnWallTime -= Time.deltaTime;

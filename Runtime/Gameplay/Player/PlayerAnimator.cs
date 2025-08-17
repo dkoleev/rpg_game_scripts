@@ -35,12 +35,16 @@ namespace Darkness.Runtime.Gameplay.Player {
             _attack.OnPerformAttack += PlayAttack;
             _attack.OnHit += PlayHitWhileAttack;
             _attack.OnBlocking += SetBlock;
+            _attack.OnDead += Dead;
+            _attack.OnHurt += Hurt; 
         }
-
+        
         private void OnDisable() {
             _attack.OnPerformAttack -= PlayAttack;
             _attack.OnHit -= PlayHitWhileAttack;
             _attack.OnBlocking -= SetBlock;
+            _attack.OnDead -= Dead;
+            _attack.OnHurt -= Hurt;
         }
 
         private void LateUpdate() {
@@ -125,6 +129,14 @@ namespace Darkness.Runtime.Gameplay.Player {
             }
             _isSitting = isSitting;
             _anim.CrossFadeInFixedTime(isSitting ? "ToSit" : "FromSit", 0f); //Play instead CrossFadeInFixedTime?
+        }
+        
+        private void Hurt() {
+            _anim.Play("Hurt");
+        }
+        
+        private void Dead() {
+            _anim.Play("Death");                        
         }
 
         private void PlayAnimationFromOffset(string clipName, float skipSeconds) {

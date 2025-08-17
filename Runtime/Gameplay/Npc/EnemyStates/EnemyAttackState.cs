@@ -13,6 +13,7 @@ namespace Darkness.Runtime.Gameplay.Npc.EnemyStates {
 
         public void Update(EnemyAI enemyAI, EnemyAISettings enemyAISettings) {
             enemyAI.SetDirection(enemyAI.PlayerTransform.position.x > enemyAI.Transform.position.x ? 1 : -1);
+            
             _timer += Time.deltaTime;
             if (_timer < enemyAISettings.AttackStartPhaseTime) {
                 return;
