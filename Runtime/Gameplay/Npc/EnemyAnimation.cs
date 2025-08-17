@@ -34,6 +34,9 @@ namespace Darkness.Runtime.Gameplay.Npc {
                 case EnemyChaseState:
                     Walk();
                     break;
+                case EnemyDeadState:
+                    Death();
+                    break;
             }
         }
 
@@ -49,8 +52,8 @@ namespace Darkness.Runtime.Gameplay.Npc {
             _animator.Play("Attack");
         }
 
-        private void Dead() {
-            _animator.Play("Dead");
+        private void Death() {
+            _animator.Play("Death");
         }
     }
 }

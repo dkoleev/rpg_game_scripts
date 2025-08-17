@@ -3,6 +3,7 @@
 namespace Darkness.Runtime.ScriptableObjects {
     [CreateAssetMenu(fileName = "EnemyAI_Settings", menuName = "Game/Enemy AI Settings")]
     public class EnemyAISettings : ScriptableObject {
+        [field: SerializeField] public int Health { get; private set; } = 10;
         [field: SerializeField] public int Damage { get; private set; } = 5;
         [field: SerializeField] public float MoveSpeed { get; private set; } = 1f;
         [field: SerializeField] public float ChaseSpeed { get; private set; } = 2f;

@@ -11,6 +11,9 @@ namespace Darkness.Runtime.ScriptableObjects {
             Sit
         }
 
+        [Header("Common")] 
+        [SerializeField] public int health = 100;
+        [SerializeField] public int damage = 10;
         [Header("hitbox")]
         [SerializeField] public Vector2 hitboxSize;
         [SerializeField] public Vector2 hitBoxOffset;

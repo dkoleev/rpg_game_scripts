@@ -12,6 +12,8 @@ using UnityEngine.InputSystem;
 
 namespace Darkness.Runtime.Gameplay.Player {
     public class PlayerPlatformerAttack : MonoBehaviourGizmosExt, IHittable {
+        private string LogPrefix => $"<color=green>[Player]: {gameObject.name}</color>";
+        
         private const int MaxLightAttackIndex = 2;
         
         [SerializeField] private PlayerAttackSettings settings;
@@ -91,7 +93,7 @@ namespace Darkness.Runtime.Gameplay.Player {
         }
 
         private async UniTaskVoid Attack(bool isSlow, CancellationToken cancellationToken) {
-            GameManager.Logger.Log("[Attack]: Start attack");
+            GameManager.Logger.Log($"{LogPrefix} Start attack");
             LightAttackInFinalStageProgress = false;
             
             if (_lightAttackSeriesIndex > MaxLightAttackIndex) {
@@ -160,7 +162,7 @@ namespace Darkness.Runtime.Gameplay.Player {
             }
 
             AttackInProgress = false;
-            GameManager.Logger.Log("[Attack]: Finish attack");
+            GameManager.Logger.Log($"{LogPrefix} Finish attack");
         }
         
         private void PerformAttack(PlayerAttackSettings.AttackType attackType) {
@@ -184,7 +186,7 @@ namespace Darkness.Runtime.Gameplay.Player {
                 var isHit = false;
                 var hitComponent = hit.GetComponent<IHittable>();
                 if (hitComponent is not null) {
-                    hitComponent.TakeHit(25);
+                    hitComponent.TakeHit(settings.damage);
 
                     var physicsComponent = hit.GetComponent<IPhysicsObject>();
                     if (physicsComponent is not null) {
@@ -272,7 +274,7 @@ namespace Darkness.Runtime.Gameplay.Player {
 
         public void TakeHit(int damage) {
             _playerState.currentHealth -= damage;
-            GameManager.Logger.Log($"[Player]: Take hit. Damage: <color=red>{damage}</color>, Health: <color=red>{_playerState.currentHealth}</color>");
+            GameManager.Logger.Log($"{LogPrefix} Take hit. Damage: <color=red>{damage}</color>, Health: <color=red>{_playerState.currentHealth}</color>");
             if (_playerState.currentHealth <= 0) {
                 _playerState.currentHealth = 0;
                 Dead();
@@ -280,7 +282,7 @@ namespace Darkness.Runtime.Gameplay.Player {
         }
 
         private void Dead() {
-            GameManager.Logger.Log($"[Player]: Dead");
+            GameManager.Logger.Log($"{LogPrefix} Dead");
         }
     }
 }

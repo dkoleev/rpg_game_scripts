@@ -1,5 +1,4 @@
 ﻿using Alchemy.Inspector;
-using Cysharp.Threading.Tasks;
 using Darkness.Runtime.Gameplay.Npc.EnemyStates;
 using Darkness.Runtime.ScriptableObjects;
 using Drawing;
@@ -9,6 +8,8 @@ using UnityEngine.UIElements;
 
 namespace Darkness.Runtime.Gameplay.Npc {
     public class EnemyAI : MonoBehaviourGizmosExt, IHittable, IPhysicsObject {
+        private string LogPrefix => $"<color=red>[Enemy]: {gameObject.name}</color>";
+        
         [Required] [SerializeField] private EnemyAISettings settings;
 
         [HelpBox("Keep this collider disabled, so it doesn't interfere with physics. Also disable UseByComposite and IsTrigger",
@@ -30,19 +31,21 @@ namespace Darkness.Runtime.Gameplay.Npc {
         
         public Transform PlayerTransform => _playerTransform;
 
-        private bool _isFacingRight => _currentDirection == 1;
+        private bool IsFacingRight => _currentDirection == 1;
         private Rigidbody2D _rigidbody2D;
         private Vector2 _startPosition;
         private int _currentDirection; // -1 = left, 1 = right
         private Transform _playerTransform;
         private bool _attackInProgress;
 
-        private IEnemyState _currentStateMachine;
+        private IEnemyState _currentState;
+        private int _currentHealth;
 
         private void Awake() {
             _currentDirection = settings.StartDirectionToRight ? 1 : -1;
             _rigidbody2D = GetComponent<Rigidbody2D>();
             attackCollider.enabled = false;
+            _currentHealth = settings.Health;
         }
 
         protected override void OnGameReady() {
@@ -52,17 +55,17 @@ namespace Darkness.Runtime.Gameplay.Npc {
         }
         
         public void ChangeState(IEnemyState newState) {
-            var oldState = _currentStateMachine;
+            var oldState = _currentState;
             
-            _currentStateMachine?.Exit(this, settings);
-            _currentStateMachine = newState;
-            _currentStateMachine.Enter(this, settings);
+            _currentState?.Exit(this, settings);
+            _currentState = newState;
+            _currentState.Enter(this, settings);
             
             OnStateChanged?.Invoke(oldState, newState);
 
             GameManager.Logger.Log(oldState is null
-                ? $"[Enemy]: State changed to {newState.GetType().Name}"
-                : $"[Enemy]: State changed from {oldState.GetType().Name} to {newState.GetType().Name}");
+                ? $"{LogPrefix} State changed to {newState.GetType().Name}"
+                : $"{LogPrefix} State changed from {oldState.GetType().Name} to {newState.GetType().Name}");
         }
 
         private void Update() {
@@ -70,13 +73,22 @@ namespace Darkness.Runtime.Gameplay.Npc {
                 return;
             }
 
-            _currentStateMachine.Update(this, settings);
+            _currentState.Update(this, settings);
         }
         
         public void TakeHit(int damage) {
+            if (_currentState is EnemyDeadState) {
+                return;
+            }
             
+            _currentHealth -= damage;
+            GameManager.Logger.Log($"{LogPrefix} take hit: damage: <color=green>{damage}</color>, health: <color=green>{_currentHealth}</color>");
+            if (_currentHealth <= 0) {
+                _currentHealth = 0;
+                Dead();                
+            }
         }
-        
+
         private void ReturnToStartPoint() {
             _currentDirection = _startPosition.x > transform.position.x ? 1 : -1;
             Move();
@@ -88,11 +100,12 @@ namespace Darkness.Runtime.Gameplay.Npc {
         private void Stunned() { }
 
         private void Dead() {
-            _rigidbody2D.linearVelocity = Vector2.zero;
+            ChangeState(new EnemyDeadState());
+            GameManager.Logger.Log($"{LogPrefix} Dead.");
         }
 
         public void Move() {
-            var dir  = _isFacingRight ? Vector2.right : Vector2.left;
+            var dir  = IsFacingRight ? Vector2.right : Vector2.left;
             transform.Translate(dir * (_currentDirection * settings.MoveSpeed * Time.deltaTime));
         }
 
@@ -119,7 +132,7 @@ namespace Darkness.Runtime.Gameplay.Npc {
         }
         
         private void UpdateFacing() {
-            transform.rotation = Quaternion.Euler(0f, _isFacingRight ? 0f : 180f, 0f);
+            transform.rotation = Quaternion.Euler(0f, IsFacingRight ? 0f : 180f, 0f);
         }
 
         public override void DrawGizmos() {
